@@ -3312,14 +3312,16 @@ function closeDeleteChecklistModal() {
   deletingClId = null;
 }
 
-// Recalcula pontos e contagem de checklists de todos os motoristas a partir dos dados reais
+// Recalcula pontos e contagem de checklists de todos os motoristas a partir dos dados reais.
+// Checklists reprovados pelo gestor NÃO contam para pontuação nem ranking.
 function recalcDriverStats() {
   drivers.forEach(d => { d.p = 0; d.c = 0; });
   checklists.forEach(cl => {
+    if (cl.gestorDecisao === 'Reprovado') return; // reprovados não pontuam
     const dr = drivers.find(x => x.n === cl.m);
     if (dr) { dr.p += (cl.score || 0); dr.c += 1; }
   });
-  // Persiste no banco cada motorista afetado
+  // Persiste no banco cada motorista
   drivers.forEach(d => dbSaveMotorista(d));
   // Re-ordena por pontos
   drivers.sort((a, b) => b.p - a.p);
@@ -5002,7 +5004,7 @@ function selectDecisao(decisao) {
   btn.innerHTML = `<i class="ti ti-check"></i> Confirmar como ${decisao}`;
 }
 
-function confirmarDecisao(checklistId) {
+async function confirmarDecisao(checklistId) {
   if (!_decisaoSelecionada) return;
   const c = checklists.find(x => x.id === checklistId);
   if (!c) return;
@@ -5014,9 +5016,18 @@ function confirmarDecisao(checklistId) {
   c.gestorDecisao = _decisaoSelecionada;
   c.gestorObs     = obs;
   c.gestorData    = dataHora;
-  c.status        = _decisaoSelecionada; // sync status on table
+  c.status        = _decisaoSelecionada;
 
   _decisaoSelecionada = null;
+
+  // Salva no banco
+  if (c.dbId) {
+    await dbUpdateChecklistDecisao(c.dbId, c.gestorDecisao, c.gestorObs, c.gestorData);
+    showSyncStatus('Decisão salva', 'ok');
+  }
+
+  // Recalcula ranking e atualiza motoristas
+  recalcDriverStats();
 
   // Re-render the modal body with updated data
   window._currentViewChecklist = c;
@@ -5025,19 +5036,42 @@ function confirmarDecisao(checklistId) {
   // Update table and dashboard
   renderTable();
   renderDashboard();
+  renderRanking();
+  renderMotoristas();
 
   showToast(`Checklist ${c.id} ${c.gestorDecisao.toLowerCase()} pelo gestor!`);
 }
 
-function reabrirDecisao(checklistId) {
+async function reabrirDecisao(checklistId) {
   const c = checklists.find(x => x.id === checklistId);
   if (!c) return;
   c.gestorDecisao = null;
   c.gestorObs     = null;
   c.gestorData    = null;
+  c.status        = 'Pendente';
   _decisaoSelecionada = null;
+
+  // Limpa no banco
+  if (c.dbId) {
+    const sb = getSB();
+    if (sb) await dbRun('reabrir decisão', () =>
+      sb.from('checklists').update({
+        gestor_decisao: null, gestor_obs: null,
+        gestor_data: null, status: 'Pendente'
+      }).eq('id', c.dbId)
+    );
+    showSyncStatus('Decisão reaberta', 'ok');
+  }
+
+  // Recalcula ranking e atualiza motoristas
+  recalcDriverStats();
+
   window._currentViewChecklist = c;
   viewChecklist(c.id);
+  renderTable();
+  renderDashboard();
+  renderRanking();
+  renderMotoristas();
 }
 
 // ── EXPORT PDF ──
@@ -5045,66 +5079,64 @@ function exportPDF() {
   const c = window._currentViewChecklist;
   if (!c) return;
 
-  const modelo = veiculoModelo[c.v] || c.v;
-  const total = checklistItems.length;
-  const okCount = Math.round((c.score / 100) * total);
-  const earned = Math.round(c.score * total / 10);
-  const statusColor = c.status === 'Aprovado' ? '#16a34a' : c.status === 'Reprovado' ? '#dc2626' : '#d97706';
-  const statusBg = c.status === 'Aprovado' ? '#dcfce7' : c.status === 'Reprovado' ? '#fee2e2' : '#fef9c3';
-  const scoreColor = c.score >= 70 ? '#16a34a' : c.score >= 40 ? '#d97706' : '#dc2626';
-
-  const itemResults = checklistItems.map((item, i) => {
-    if (i < okCount) return { ...item, res: 'ok' };
-    if (i === okCount && c.score < 100) return { ...item, res: 'naook' };
-    return { ...item, res: 'na' };
+  // ── Mesma lógica do viewChecklist ──
+  const hasRealItens = c.itensResult && c.itensResult.length > 0;
+  const itensList = hasRealItens ? c.itensResult : checklistItems.map((item, i) => {
+    const total   = checklistItems.length;
+    const okCount = Math.round((c.score / 100) * total);
+    return { nome: item.name, pts: item.pts, critico: item.requirePhoto, ok: i < okCount, foto: c.fotos && c.fotos[i] ? c.fotos[i] : null };
   });
 
-  const obs = c.obs || (c.status === 'Aprovado' ? 'Aprovado sem ressalvas.' :
+  const total  = itensList.reduce((s, it) => s + (it.pts || 10), 0);
+  const earned = itensList.filter(it => it.ok).reduce((s, it) => s + (it.pts || 10), 0);
+
+  const vObj      = veiculos.find(x => x.placa === c.v);
+  const modelo    = vObj ? `${vObj.modelo}${vObj.ano ? ' ' + vObj.ano : ''}` : (veiculoModelo[c.v] || c.v);
+  const modeloNome = c.modeloNome || 'Checklist Padrão';
+
+  const statusColor = c.status === 'Aprovado' ? '#15803d' : c.status === 'Reprovado' ? '#b91c1c' : '#92400e';
+  const statusBg    = c.status === 'Aprovado' ? '#dcfce7' : c.status === 'Reprovado' ? '#fee2e2' : '#fef9c3';
+  const scoreColor  = c.score >= 70 ? '#16a34a' : c.score >= 40 ? '#d97706' : '#dc2626';
+
+  const obs = c.obs || (c.status === 'Aprovado' ? 'Veículo em boas condições. Aprovado sem ressalvas.' :
                c.status === 'Reprovado' ? 'Itens críticos identificados. Veículo necessita de manutenção.' :
                'Aguardando revisão dos itens pendentes pelo gestor.');
 
   const now = new Date();
   const geradoEm = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}, ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-  const itemsHTML = itemResults.map((item, i) => {
-    // Suporta URL do Storage (string http) e dataUrl ({ dataUrl, name })
-    const _fotoRaw = (c.fotos && c.fotos[i]) || item.foto || null;
-    const foto = _fotoRaw
+  const itemsHTML = itensList.map((item, i) => {
+    // Mesma lógica de resolução de foto do viewChecklist
+    const _fotoRaw = item.foto || (c.fotos && c.fotos[i]);
+    const fotoData = _fotoRaw
       ? (typeof _fotoRaw === 'string'
-          ? { dataUrl: _fotoRaw, name: item.name }
+          ? { dataUrl: _fotoRaw, name: item.nome || item.name }
           : _fotoRaw)
       : null;
+
+    const tagBg  = item.ok ? '#dcfce7' : '#fee2e2';
+    const tagClr = item.ok ? '#15803d' : '#b91c1c';
+    const tagLbl = item.ok ? 'OK' : 'Não OK';
+    const ptsTxt = item.ok ? `+${item.pts || 10} pontos` : `0 pontos`;
+
     return `
     <div style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:7px;background:#fff;overflow:hidden">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:4px;height:36px;background:${item.res==='ok'?'#16a34a':item.res==='naook'?'#dc2626':'#cbd5e1'};border-radius:2px;flex-shrink:0"></div>
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#111827;display:flex;align-items:center;gap:6px">
-              ${i+1}. ${item.name}
-              ${item.requirePhoto ? `<span style="font-size:10px;color:#2563eb;background:#eff6ff;padding:1px 6px;border-radius:8px;font-weight:700">📷 Foto</span>` : ''}
-            </div>
-            <div style="font-size:11px;color:#6b7a99;margin-top:2px">
-              ${item.res==='ok'?`+${item.pts} pontos`:item.res==='naook'?`-${item.pts} pontos`:'0 pontos'}
-            </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:600;color:#111827">${item.nome || item.name}</span>
+            ${item.critico ? `<span style="font-size:10px;color:#dc2626;background:#fef2f2;padding:1px 6px;border-radius:8px;font-weight:700">CRÍTICO</span>` : ''}
+            ${item.cat ? `<span style="font-size:10px;color:#6b7a99;background:#f1f5f9;padding:1px 6px;border-radius:8px">${item.cat}</span>` : ''}
           </div>
+          <div style="font-size:11px;color:#6b7a99;margin-top:2px">${ptsTxt}</div>
         </div>
-        <div style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;
-             background:${item.res==='ok'?'#dcfce7':item.res==='naook'?'#fee2e2':'#f1f5f9'};
-             color:${item.res==='ok'?'#15803d':item.res==='naook'?'#b91c1c':'#64748b'}">
-          ${item.res==='ok'?'OK':item.res==='naook'?'Não OK':'N/A'}
-        </div>
+        <div style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0;background:${tagBg};color:${tagClr}">${tagLbl}</div>
       </div>
-      ${item.requirePhoto ? (foto
-        ? `<div style="border-top:1px solid #e2e8f0">
-             <img src="${foto.dataUrl}" style="display:block;width:100%;max-height:200px;object-fit:contain;background:#f8fafc">
-             <div style="background:#f0f9ff;padding:5px 14px;font-size:10px;color:#2563eb;font-weight:600">
-               📷 Foto registrada · ${foto.name}
-             </div>
-           </div>`
-        : `<div style="border-top:1px solid #fde68a;background:#fffbeb;padding:8px 14px;
-               font-size:11px;color:#92400e">⚠️ Foto obrigatória não enviada</div>`
-      ) : ''}
+      ${fotoData ? `
+        <div style="margin-top:0;border-top:1px solid #e2e8f0;overflow:hidden">
+          <img src="${fotoData.dataUrl || fotoData}" style="display:block;width:100%;max-height:300px;object-fit:contain;background:#f8fafc">
+          <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:5px 10px;font-size:10px;color:#6b7a99;font-weight:600">📷 Foto registrada</div>
+        </div>` : ''}
     </div>`;
   }).join('');
 
@@ -5112,146 +5144,140 @@ function exportPDF() {
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Relatório de Vistoria ${c.id}</title>
+<title>Checklist ${c.id}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { margin:0;padding:0;box-sizing:border-box; }
-  body { font-family:'Plus Jakarta Sans',sans-serif; background:#f0f2f8; }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Plus Jakarta Sans',sans-serif; background:#f0f2f8; color:#111827; font-size:14px; }
   @media print {
     body { background:#fff; }
-    .page-wrap { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; }
+    .pdf-modal { box-shadow:none !important; margin:0 !important; border-radius:0 !important; max-width:100% !important; }
   }
-  @page { margin: 10mm; size: A4; }
+  @page { margin:10mm; size:A4; }
 </style>
 </head>
 <body>
-<div class="page-wrap" style="max-width:620px;margin:20px auto;background:#fff;border-radius:16px;
-     overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.12)">
+<div class="pdf-modal" style="max-width:680px;margin:20px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.22)">
 
-  <!-- HEADER -->
-  <div style="background:linear-gradient(135deg,#0d1b35 0%,#1c2f58 100%);padding:28px 32px 24px;position:relative">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between">
-      <div>
-        <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-.3px">RELATÓRIO DE VISTORIA</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px">Checklist Digital de Veículo</div>
-      </div>
-      <div style="padding:7px 18px;border-radius:25px;font-size:13px;font-weight:700;
-           background:${statusBg};color:${statusColor}">
-        ${c.status.toUpperCase()}
-      </div>
+  <!-- vm-header -->
+  <div style="background:#fff;padding:20px 24px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:flex-start;justify-content:space-between;border-radius:16px 16px 0 0">
+    <div>
+      <div style="font-size:16px;font-weight:700;color:#111827">Checklist ${c.id}</div>
+      <div style="font-size:12px;color:#6b7a99;margin-top:3px">${c.m} · ${c.v} · ${c.d}</div>
     </div>
+    <div style="font-size:11px;color:#6b7a99;padding-top:4px">Gerado em ${geradoEm}</div>
   </div>
 
-  <!-- BODY -->
-  <div style="padding:28px 32px">
+  <!-- vm-body -->
+  <div style="padding:20px 24px">
 
-    <!-- Score -->
-    <div style="background:#f8fafc;border-radius:12px;padding:18px 20px;margin-bottom:22px;
-         border:1px solid #e2e8f0">
-      <div style="display:flex;align-items:center;gap:16px">
-        <div style="font-size:40px;font-weight:800;color:${scoreColor};line-height:1">${c.score}%</div>
-        <div style="flex:1">
-          <div style="font-size:11px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.5px">PONTUAÇÃO</div>
-          <div style="font-size:13px;color:#111827;margin-top:2px">${earned} de ${total*10} pontos</div>
-          <div style="font-size:11px;color:#6b7a99">Total obtido / Máximo possível</div>
-          <div style="height:7px;background:#e2e8f0;border-radius:4px;margin-top:8px;overflow:hidden">
-            <div style="width:${c.score}%;height:100%;background:${scoreColor};border-radius:4px"></div>
-          </div>
+    <!-- vm-score-banner -->
+    <div style="background:linear-gradient(135deg,#0d1b35 0%,#1c2f58 100%);border-radius:12px;padding:18px 20px;display:flex;align-items:center;gap:20px;margin-bottom:20px">
+      <div style="width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,0.12);border:3px solid rgba(255,255,255,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+        <div style="font-size:20px;font-weight:800;color:#fff;line-height:1">${c.score}%</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px">SCORE</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px;color:rgba(255,255,255,0.7)">${earned} de ${total} pontos · Total obtido / Máximo possível</div>
+        <div style="height:6px;background:rgba(255,255,255,0.2);border-radius:3px;margin-top:8px;overflow:hidden">
+          <div style="width:${c.score}%;height:100%;background:${scoreColor};border-radius:3px"></div>
         </div>
       </div>
+      <div style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;flex-shrink:0;background:${statusBg};color:${statusColor}">${c.status}</div>
     </div>
 
-    <!-- Meta grid -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px">
-      <div style="background:#f8fafc;border-radius:8px;padding:12px 14px;border:1px solid #e2e8f0">
-        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">MOTORISTA</div>
-        <div style="font-size:14px;font-weight:600;color:#111827;margin-top:4px">${c.m}</div>
+    <!-- vm-meta-grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <div style="background:#f8fafc;border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Motorista</div>
+        <div style="font-size:13px;font-weight:600;color:#111827;margin-top:3px">${c.m}</div>
       </div>
-      <div style="background:#f8fafc;border-radius:8px;padding:12px 14px;border:1px solid #e2e8f0">
-        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">VEÍCULO</div>
-        <div style="font-size:14px;font-weight:600;color:#111827;margin-top:4px">${c.v} — ${modelo}</div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Veículo</div>
+        <div style="font-size:13px;font-weight:600;color:#111827;margin-top:3px">${c.v} — ${modelo}</div>
       </div>
-      <div style="background:#f8fafc;border-radius:8px;padding:12px 14px;border:1px solid #e2e8f0">
-        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">MODELO/TEMPLATE</div>
-        <div style="font-size:14px;font-weight:600;color:#111827;margin-top:4px">Checklist Padrão</div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Data da Vistoria</div>
+        <div style="font-size:13px;font-weight:600;color:#111827;margin-top:3px">${c.d}</div>
       </div>
-      <div style="background:#f8fafc;border-radius:8px;padding:12px 14px;border:1px solid #e2e8f0">
-        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">DATA DA VISTORIA</div>
-        <div style="font-size:14px;font-weight:600;color:#111827;margin-top:4px">${c.d}</div>
-      </div>
-    </div>
-
-    <!-- Items -->
-    <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;
-         letter-spacing:.6px;margin-bottom:12px">ITENS VISTORIADOS</div>
-    ${itemsHTML}
-
-    <!-- Observações -->
-    <div style="margin-top:20px">
-      <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;
-           letter-spacing:.6px;margin-bottom:10px">CONFIRMAÇÃO</div>
-      <div style="background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;padding:14px">
-        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;
-             letter-spacing:.4px;margin-bottom:8px">OBSERVAÇÕES DO GESTOR</div>
-        <div style="font-size:13px;color:#111827;line-height:1.6">${obs}</div>
+      <div style="background:#f8fafc;border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Modelo/Template</div>
+        <div style="font-size:13px;font-weight:600;color:#111827;margin-top:3px">${modeloNome}</div>
       </div>
     </div>
 
-    <!-- Assinatura -->
-    <div style="margin-top:20px">
-      <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;
-           letter-spacing:.6px;margin-bottom:10px">ASSINATURA DO MOTORISTA</div>
-      <div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden">
-        ${c.sig
-          ? `<img src="${c.sig}" style="display:block;width:100%;height:110px;object-fit:contain;background:#fff">`
-          : `<div style="height:80px;display:flex;align-items:center;justify-content:center;
-                background:#f8fafc;color:#c1c9d9;font-size:12px;gap:6px">
-               Sem assinatura registrada
-             </div>`
-        }
-        <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:8px 14px;
-             display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:11px;color:#6b7a99">${c.m}</div>
-          <div style="font-size:11px;color:#6b7a99">${c.d}</div>
-        </div>
+    <!-- vm-section-title: Itens -->
+    <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">📋 Itens Vistoriados</div>
+
+    <!-- vm-items -->
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:20px">
+      ${itemsHTML}
+    </div>
+
+    <!-- Observações do Gestor -->
+    <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">💬 Observações do Gestor</div>
+    <div style="background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;padding:12px 14px;font-size:13px;color:#111827;line-height:1.6;margin-bottom:20px">${obs}</div>
+
+    <!-- Assinatura do Motorista -->
+    <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">✍️ Assinatura do Motorista</div>
+    <div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:20px">
+      ${c.sig
+        ? `<img src="${c.sig}" style="display:block;width:100%;height:100px;object-fit:contain;background:#fff">`
+        : `<div style="height:80px;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#c1c9d9;font-size:12px;gap:6px">Sem assinatura registrada</div>`
+      }
+      <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:6px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:11px;color:#6b7a99">${c.m}</div>
+        <div style="font-size:11px;color:#6b7a99">${c.d}</div>
       </div>
     </div>
 
     <!-- Decisão do Gestor -->
-    <div style="margin-top:20px">
-      <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;
-           letter-spacing:.6px;margin-bottom:10px">DECISÃO DO GESTOR</div>
-      ${c.gestorDecisao ? `
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;
-             background:${c.gestorDecisao==='Aprovado'?'#f0fdf4':'#fef2f2'};
-             border:1.5px solid ${c.gestorDecisao==='Aprovado'?'#bbf7d0':'#fecaca'}">
-          <div style="font-size:22px">${c.gestorDecisao==='Aprovado'?'✅':'❌'}</div>
-          <div>
-            <div style="font-size:14px;font-weight:700;color:${c.gestorDecisao==='Aprovado'?'#15803d':'#b91c1c'}">
-              ${c.gestorDecisao==='Aprovado'?'Aprovado pelo Gestor':'Reprovado pelo Gestor'}
-            </div>
-            ${c.gestorObs?`<div style="font-size:12px;color:#6b7a99;margin-top:3px">${c.gestorObs}</div>`:''}
-            ${c.gestorData?`<div style="font-size:11px;color:#94a3b8;margin-top:4px">Em ${c.gestorData}</div>`:''}
-          </div>
+    <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">🛡️ Decisão do Gestor</div>
+    ${c.gestorDecisao ? `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;
+           background:${c.gestorDecisao==='Aprovado'?'#f0fdf4':'#fef2f2'};
+           color:${c.gestorDecisao==='Aprovado'?'#15803d':'#b91c1c'};
+           border:1.5px solid ${c.gestorDecisao==='Aprovado'?'#bbf7d0':'#fecaca'}">
+        <span style="font-size:22px;flex-shrink:0">${c.gestorDecisao==='Aprovado'?'✅':'❌'}</span>
+        <div>
+          <div>${c.gestorDecisao==='Aprovado'?'Checklist aprovado pelo gestor':'Checklist reprovado pelo gestor'}</div>
+          ${c.gestorObs?`<div style="font-size:12px;opacity:.8;margin-top:2px">${c.gestorObs}</div>`:''}
+          ${c.gestorData?`<div style="font-size:11px;opacity:.6;margin-top:4px">Em ${c.gestorData}</div>`:''}
         </div>
-      ` : `
-        <div style="padding:14px 16px;border-radius:10px;background:#fffbeb;border:1.5px solid #fde68a;
-             font-size:13px;color:#92400e">⏳ Aguardando decisão do gestor</div>
-      `}
-    </div>
+      </div>
+    ` : `
+      <div style="padding:14px 16px;border-radius:10px;background:#fffbeb;border:1.5px solid #fde68a;font-size:13px;color:#92400e">⏳ Aguardando decisão do gestor</div>
+    `}
 
   </div>
 
-  <!-- FOOTER -->
-  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:14px 32px;
-       display:flex;justify-content:space-between;align-items:center">
+  <!-- footer -->
+  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:12px 24px;display:flex;justify-content:space-between;align-items:center">
     <div style="font-size:11px;color:#6b7a99">AutoCheck — Sistema de Vistoria de Veículos</div>
-    <div style="font-size:11px;color:#6b7a99">Gerado em ${geradoEm} · Página 1 de 1</div>
+    <div style="font-size:11px;color:#6b7a99">Gerado em ${geradoEm}</div>
   </div>
 
 </div>
-<scr` + `ipt>window.onload=function(){window.print();}<\/script>
+<scr` + `ipt>
+window.onload = function() {
+  var imgs = document.querySelectorAll('img');
+  if (imgs.length === 0) { window.print(); return; }
+  var loaded = 0;
+  var total = imgs.length;
+  function tryPrint() {
+    loaded++;
+    if (loaded >= total) window.print();
+  }
+  imgs.forEach(function(img) {
+    if (img.complete) { tryPrint(); }
+    else {
+      img.addEventListener('load', tryPrint);
+      img.addEventListener('error', tryPrint); // print even if image fails
+    }
+  });
+};
+<\/script>
 </body>
 </html>`;
 
