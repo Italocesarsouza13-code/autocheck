@@ -5113,29 +5113,26 @@ function renderAppItems() {
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">${fotosSlots}</div>
           </div>` : ''}
+        <!-- Comentário por item (opcional, habilitado no modelo) -->
+        ${item.temComentario ? `
+          <div style="margin-top:8px">
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">
+              <i class="ti ti-message-2" style="font-size:11px;color:rgba(255,255,255,.35)"></i>
+              <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);
+                text-transform:uppercase;letter-spacing:.4px">Comentário <span style="font-weight:400;font-style:italic">(opcional)</span></span>
+            </div>
+            <textarea id="comentario-item-${i}"
+              placeholder="Observação sobre este item..."
+              rows="2"
+              style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+                border-radius:8px;padding:8px 11px;font-size:12px;color:#fff;font-family:inherit;
+                resize:vertical;outline:none;box-sizing:border-box;transition:border-color .15s;
+                line-height:1.5;min-height:54px"
+              onfocus="this.style.borderColor='var(--accent)'"
+              onblur="this.style.borderColor='rgba(255,255,255,.12)'"></textarea>
+          </div>` : ''}
       </div>`;
     }).join('');
-
-    const grupoKey = g.nome ? g.nome.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'') : `grupo_${gruposRender.indexOf(g)}`;
-    const commentField = `
-      <div style="padding:10px 14px 12px;border-top:1px solid rgba(255,255,255,.07)">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-          <i class="ti ti-message-2" style="font-size:12px;color:rgba(255,255,255,.35)"></i>
-          <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.4px">
-            Comentário${g.nome ? ' — ' + g.nome : ''} <span style="font-weight:400;font-style:italic">(opcional)</span>
-          </span>
-        </div>
-        <textarea id="comentario-grupo-${grupoKey}"
-          placeholder="Observações sobre este grupo..."
-          rows="2"
-          style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
-            border-radius:8px;padding:9px 12px;font-size:12px;color:#fff;font-family:inherit;
-            resize:vertical;outline:none;box-sizing:border-box;transition:border-color .15s;
-            line-height:1.5;min-height:60px"
-          onfocus="this.style.borderColor='var(--accent)'"
-          onblur="this.style.borderColor='rgba(255,255,255,.12)'"
-        ></textarea>
-      </div>`;
 
     return g.nome ? `
       <div style="margin-bottom:6px">
@@ -5149,10 +5146,9 @@ function renderAppItems() {
         <div style="background:rgba(255,255,255,.05);border-radius:0 0 10px 10px;
           border:1px solid rgba(79,142,247,.15);border-top:none;overflow:hidden">
           ${itemsHtml}
-          ${commentField}
         </div>
       </div>` : `<div style="background:rgba(255,255,255,.05);border-radius:10px;overflow:hidden;
-        border:1px solid rgba(255,255,255,.1)">${itemsHtml}${commentField}</div>`;
+        border:1px solid rgba(255,255,255,.1)">${itemsHtml}</div>`;
   }).join('');
 
   // store flat source for save
@@ -5162,7 +5158,8 @@ function renderAppItems() {
     numFotos:  it.numFotos||(it.requirePhoto?1:0)||0,
     critico:   it.critico||false,
     cat:       g.nome||it.cat||'',
-    podeSerNA: it.podeSerNA !== false
+    podeSerNA: it.podeSerNA !== false,
+    temComentario: it.temComentario === true
   })));
   // Salva lista de grupos para coleta de comentários ao salvar
   window._appGruposRender = gruposRender.map(g => ({
@@ -5379,21 +5376,23 @@ function appSaveChecklist() {
   const savedPhotos = {};
   Object.keys(appItemPhotosMulti).forEach(k => { savedPhotos[k] = { ...appItemPhotosMulti[k] }; });
 
-  const comentariosGrupos = {};
-  (window._appGruposRender || []).forEach(g => {
-    const el = document.getElementById(`comentario-grupo-${g.grupoKey}`);
-    if (el && el.value.trim()) comentariosGrupos[g.nome || g.grupoKey] = el.value.trim();
+  // Coleta comentários por item
+  const itensResult = source.map((item, i) => {
+    const comentEl = document.getElementById(`comentario-item-${i}`);
+    const comentario = comentEl && comentEl.value.trim() ? comentEl.value.trim() : null;
+    return {
+      nome:       item.name,
+      cat:        item.cat || '',
+      pts:        item.pts || 10,
+      critico:    item.critico || false,
+      ok:         appItemStatus[i] === 'conforme',
+      status:     appItemStatus[i] || 'naoconforme',
+      foto:       appItemPhotosMulti[`${i}-0`] ? appItemPhotosMulti[`${i}-0`].dataUrl : null,
+      comentario: comentario
+    };
   });
-
-  const itensResult = source.map((item, i) => ({
-    nome:    item.name,
-    cat:     item.cat || '',
-    pts:     item.pts || 10,
-    critico: item.critico || false,
-    ok:      appItemStatus[i] === 'conforme',
-    status:  appItemStatus[i] || 'naoconforme',
-    foto:    appItemPhotosMulti[`${i}-0`] ? appItemPhotosMulti[`${i}-0`].dataUrl : null
-  }));
+  // Mantém compatibilidade: comentariosGrupos como objeto vazio
+  const comentariosGrupos = {};
 
   const obsVal = document.getElementById('appObs').value;
   const clLength = checklists.length;
@@ -6164,6 +6163,14 @@ function renderMmGrupos() {
                   <i class="ti ti-minus" style="font-size:10px"></i> N/A
                 </span>
               </div>
+              <!-- Comentário toggle -->
+              <div class="toggle-wrap" onclick="mmItemToggle(${gi},${ii},'temComentario')"
+                title="Exibe campo de comentário abaixo deste item no checklist">
+                <div class="toggle-track on-blue ${it.temComentario?'on-blue':''}" style="background:${it.temComentario?'var(--accent)':'#d1d5db'}"><div class="toggle-thumb"></div></div>
+                <span class="toggle-label" style="color:${it.temComentario?'var(--accent)':'#94a3b8'}">
+                  <i class="ti ti-message" style="font-size:10px"></i> Comentário
+                </span>
+              </div>
             </div>
           </div>`).join('')
         }
@@ -6194,7 +6201,7 @@ function mmRemoveGrupo(gi) {
 }
 
 function addMmItem(gi) {
-  mmGrupos[gi].itens.push({ nome: '', pts: 10, critico: false, numFotos: 0, ativo: true, podeSerNA: true });
+  mmGrupos[gi].itens.push({ nome: '', pts: 10, critico: false, numFotos: 0, ativo: true, podeSerNA: true, temComentario: false });
   renderMmGrupos();
   setTimeout(() => {
     const grp = document.getElementById(`mmgrupo-${gi}`);
@@ -6234,7 +6241,7 @@ function saveModelo() {
 
   // Flatten to itens for backward compat (keeps existing code working)
   const itensFlat = gruposValidos.flatMap(g =>
-    g.itens.map(it => ({ nome: it.nome, cat: g.nome, pts: it.pts, critico: it.critico, foto: it.numFotos > 0, numFotos: it.numFotos, ativo: it.ativo, podeSerNA: it.podeSerNA !== false }))
+    g.itens.map(it => ({ nome: it.nome, cat: g.nome, pts: it.pts, critico: it.critico, foto: it.numFotos > 0, numFotos: it.numFotos, ativo: it.ativo, podeSerNA: it.podeSerNA !== false, temComentario: it.temComentario === true }))
   );
 
   if (editingModeloId) {
@@ -6510,7 +6517,8 @@ function viewChecklist(id) {
   const itensList = hasRealItens ? c.itensResult : checklistItems.map((item, i) => {
     const total   = checklistItems.length;
     const okCount = Math.round((c.score / 100) * total);
-    return { nome: item.name, pts: item.pts, critico: item.requirePhoto, ok: i < okCount, foto: c.fotos && c.fotos[i] ? c.fotos[i] : null };
+    const itR = c.itensResult && c.itensResult[i];
+    return { nome: item.name, pts: item.pts, critico: item.requirePhoto, ok: i < okCount, foto: c.fotos && c.fotos[i] ? c.fotos[i] : null, comentario: itR ? itR.comentario : null };
   });
 
   const total      = itensList.reduce((s, it) => s + (it.pts || 10), 0);
@@ -6617,6 +6625,12 @@ function viewChecklist(id) {
             <div class="vm-item-photo">
               <img src="${fotoData.dataUrl || fotoData}" alt="Foto: ${item.nome || item.name}">
               <div class="vm-item-photo-label"><i class="ti ti-camera-check" style="margin-right:4px"></i>Foto registrada</div>
+            </div>` : ''}
+          ${item.comentario ? `
+            <div style="display:flex;align-items:flex-start;gap:8px;background:#f8fafc;
+              border-radius:8px;border:1px solid var(--border);padding:9px 12px;margin-top:2px">
+              <i class="ti ti-message-2" style="font-size:13px;color:var(--accent);flex-shrink:0;margin-top:1px"></i>
+              <div style="font-size:12px;color:var(--text);line-height:1.5">${item.comentario}</div>
             </div>` : ''}
         </div>`;
       }).join('')}
@@ -6800,7 +6814,8 @@ function exportPDF() {
   const itensList = hasRealItens ? c.itensResult : checklistItems.map((item, i) => {
     const total   = checklistItems.length;
     const okCount = Math.round((c.score / 100) * total);
-    return { nome: item.name, pts: item.pts, critico: item.requirePhoto, ok: i < okCount, foto: c.fotos && c.fotos[i] ? c.fotos[i] : null };
+    const itR = c.itensResult && c.itensResult[i];
+    return { nome: item.name, pts: item.pts, critico: item.requirePhoto, ok: i < okCount, foto: c.fotos && c.fotos[i] ? c.fotos[i] : null, comentario: itR ? itR.comentario : null };
   });
 
   const total  = itensList.reduce((s, it) => s + (it.pts || 10), 0);
@@ -6853,6 +6868,12 @@ function exportPDF() {
         <div style="margin-top:0;border-top:1px solid #e2e8f0;overflow:hidden">
           <img src="${fotoData.dataUrl || fotoData}" style="display:block;width:100%;max-height:300px;object-fit:contain;background:#f8fafc">
           <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:5px 10px;font-size:10px;color:#6b7a99;font-weight:600">📷 Foto registrada</div>
+        </div>` : ''}
+      ${item.comentario ? `
+        <div style="display:flex;align-items:flex-start;gap:8px;margin:0;border-top:1px solid #e2e8f0;
+          padding:9px 14px;background:#f8fafc">
+          <span style="font-size:12px;flex-shrink:0">💬</span>
+          <div style="font-size:12px;color:#374151;line-height:1.5">${item.comentario}</div>
         </div>` : ''}
     </div>`;
   }).join('');
