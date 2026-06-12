@@ -226,13 +226,31 @@
   .leg-val { margin-left: auto; font-weight: 700; color: var(--text); }
 
   /* BAR */
+  .bar-scroll-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #dde2f0 transparent;
+    padding-bottom: 4px;
+    margin: 0 -2px;
+  }
+  .bar-scroll-wrap::-webkit-scrollbar { height: 4px; }
+  .bar-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+  .bar-scroll-wrap::-webkit-scrollbar-thumb { background: #dde2f0; border-radius: 4px; }
+
   .bar-area {
     display: flex; align-items: flex-end;
-    gap: 8px; height: 160px;
-    padding-bottom: 26px; position: relative;
+    gap: 6px; height: 180px;
+    padding-bottom: 52px; position: relative;
+    padding-left: 2px; padding-right: 2px;
   }
 
-  .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .bar-col {
+    display: flex; flex-direction: column; align-items: center;
+    flex-shrink: 0;
+    width: 44px;
+  }
 
   .bar {
     background: linear-gradient(180deg, var(--accent) 0%, var(--navy2) 100%);
@@ -241,6 +259,7 @@
     transition: opacity .2s;
     position: relative;
     opacity: 0.85;
+    min-height: 4px;
   }
 
   .bar:hover { opacity: 1; }
@@ -257,7 +276,17 @@
   }
 
   .bar:hover .bar-tip { opacity: 1; }
-  .bar-lbl { font-size: 10px; color: var(--muted); margin-top: 5px; text-align: center; }
+
+  .bar-lbl {
+    font-size: 9px; color: var(--muted); margin-top: 5px;
+    text-align: right;
+    width: 44px;
+    overflow: hidden;
+    transform: rotate(-40deg) translateX(-4px);
+    transform-origin: top right;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
 
   /* TOP DRIVERS */
   .top-drivers { display: flex; flex-direction: column; gap: 8px; }
@@ -318,16 +347,30 @@
     border: 1px solid var(--border);
   }
 
+  .trend-scroll-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #dde2f0 transparent;
+    margin: 0 -2px;
+  }
+  .trend-scroll-wrap::-webkit-scrollbar { height: 4px; }
+  .trend-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+  .trend-scroll-wrap::-webkit-scrollbar-thumb { background: #dde2f0; border-radius: 4px; }
+
   .trend-bars {
     display: flex;
     align-items: flex-end;
-    gap: 6px;
+    gap: 5px;
     height: 70px;
     margin-top: 10px;
+    padding: 0 2px;
   }
 
   .trend-bar {
-    flex: 1;
+    flex-shrink: 0;
+    width: 20px;
     border-radius: 4px 4px 0 0;
     position: relative;
     transition: opacity .2s;
@@ -337,18 +380,25 @@
   .trend-bar:hover { opacity: 0.75; }
 
   .trend-lbl {
-    font-size: 9px;
+    font-size: 8px;
     color: var(--muted);
-    text-align: center;
-    margin-top: 4px;
+    text-align: right;
+    margin-top: 3px;
     display: block;
+    transform: rotate(-40deg) translateX(-2px);
+    transform-origin: top right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 32px;
   }
 
   .trend-col {
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex: 1;
+    flex-shrink: 0;
+    width: 20px;
   }
 
   .trend-score-row {
@@ -854,6 +904,7 @@
 
   .tag-ok      { background: #dcfce7; color: #15803d; }
   .tag-naook   { background: #fee2e2; color: #b91c1c; }
+  .tag-na      { background: #f1f5f9; color: #64748b; }
   .tag-na      { background: #f1f5f9; color: #64748b; }
 
   .vm-obs-box {
@@ -1481,9 +1532,366 @@
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #dde2f0; border-radius: 10px; }
+
+  /* ══════════════════════════════════════════
+     MOBILE NAVIGATION BAR (bottom tabs)
+  ══════════════════════════════════════════ */
+  .mobile-topbar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--navy);
+    z-index: 150;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  }
+
+  .mobile-topbar-title {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .mobile-topbar-logo {
+    font-size: 15px; font-weight: 700; color: #fff; letter-spacing: .2px;
+  }
+
+  .mobile-topbar-sub {
+    font-size: 10px; color: rgba(255,255,255,0.4); display: block;
+  }
+
+  .mobile-menu-btn {
+    background: rgba(255,255,255,0.1);
+    border: none; border-radius: 8px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px; cursor: pointer;
+  }
+
+  .mobile-bottomnav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: var(--navy);
+    z-index: 150;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px;
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.3);
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .mob-nav-btn {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 6px 10px;
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.4);
+    font-family: inherit; font-size: 10px; font-weight: 600;
+    border-radius: 10px;
+    transition: all .15s;
+    min-width: 52px;
+  }
+
+  .mob-nav-btn i { font-size: 22px; }
+  .mob-nav-btn.active { color: #fff; background: rgba(79,142,247,0.18); }
+  .mob-nav-btn.active i { color: var(--accent); }
+
+  /* Drawer menu overlay */
+  .mobile-drawer-bg {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+  }
+
+  .mobile-drawer-bg.open { display: block; }
+
+  .mobile-drawer {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 260px;
+    background: var(--navy);
+    z-index: 201;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .mobile-drawer.open { transform: translateX(0); }
+
+  .mobile-drawer-header {
+    padding: 20px 18px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .mobile-drawer-close {
+    background: rgba(255,255,255,0.08); border: none; border-radius: 8px;
+    width: 32px; height: 32px; color: rgba(255,255,255,0.6);
+    font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ══════════════════════════════════════════
+     RESPONSIVE BREAKPOINTS
+  ══════════════════════════════════════════ */
+  @media (max-width: 768px) {
+
+    /* Show mobile UI elements */
+    .mobile-topbar { display: flex; }
+    .mobile-bottomnav { display: flex; }
+
+    /* Body layout */
+    body {
+      flex-direction: column;
+      height: auto;
+      overflow: auto;
+      padding-top: 56px;
+      padding-bottom: 64px;
+    }
+
+    /* Hide desktop sidebar */
+    .sidebar { display: none; }
+
+    /* Main content full width */
+    .main {
+      padding: 18px 14px;
+      overflow-y: visible;
+      width: 100%;
+    }
+
+    /* Page title */
+    .page-title { font-size: 18px; }
+    .page-sub { font-size: 12px; margin-bottom: 16px; }
+    .page-header { flex-direction: column; gap: 12px; align-items: stretch; margin-bottom: 16px; }
+    .page-header .btn-primary { width: 100%; justify-content: center; }
+
+    /* ── STAT CARDS: 2 colunas ── */
+    .stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card { padding: 14px 12px; }
+    .stat-num { font-size: 22px; }
+    .stat-icon { width: 36px; height: 36px; font-size: 17px; }
+
+    /* ── CHARTS: coluna única ── */
+    .charts-row {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chart-card { padding: 14px; }
+
+    .bar-area { height: 180px; }
+    .bar-scroll-wrap { margin: 0; }
+
+    /* pie chart smaller */
+    #pieChart { width: 90px !important; height: 90px !important; }
+
+    /* ── BOTTOM ROW ── */
+    .bottom-row {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .avg-card { padding: 16px; }
+    .avg-val { font-size: 28px; }
+
+    /* ── TABLES: card list on mobile ── */
+    .table-card { border-radius: 10px; overflow: visible; }
+
+    table { display: none; }
+
+    /* Mobile card list rendered via JS */
+    .mob-card-list { display: flex; flex-direction: column; gap: 10px; padding: 10px; }
+
+    .mob-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .mob-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .mob-card-id { font-size: 11px; font-weight: 700; color: var(--muted); }
+    .mob-card-name { font-size: 14px; font-weight: 700; color: var(--text); margin-top: 1px; }
+    .mob-card-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .mob-card-meta { font-size: 11px; color: var(--muted); background: #f8fafc; padding: 3px 8px; border-radius: 6px; }
+    .mob-card-actions { display: flex; gap: 6px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+    .mob-card-actions button { flex: 1; padding: 8px; font-size: 12px; font-weight: 600; border-radius: 7px; border: 1px solid var(--border); background: #f8fafc; color: var(--text); cursor: pointer; font-family: inherit; }
+    .mob-card-actions button.primary { background: var(--navy2); color: #fff; border-color: var(--navy2); }
+    .mob-card-actions button.danger { background: var(--red-bg); color: var(--red); border-color: #fecaca; }
+
+    /* ── MODELOS: 1 coluna ── */
+    .modelo-grid { grid-template-columns: 1fr; }
+
+    /* ── PREMIOS: 1 coluna ── */
+    .premios-grid { grid-template-columns: 1fr; }
+
+    /* ── MODAL FULL SCREEN ── */
+    .modal-bg { padding: 0; align-items: flex-end; }
+
+    .modal {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 20px 20px 0 0;
+      max-height: 92vh;
+      padding: 20px 16px;
+    }
+
+    /* ── VIEW MODAL ── */
+    .view-modal-bg { padding: 0; align-items: flex-end; }
+
+    .view-modal {
+      width: 100%;
+      max-width: 100%;
+      max-height: 94vh;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .vm-header { padding: 16px 16px 12px; }
+    .vm-body { padding: 14px 16px; }
+    .vm-score-banner { flex-wrap: wrap; gap: 12px; }
+    .vm-meta-grid { grid-template-columns: 1fr 1fr; }
+    .vm-photos { grid-template-columns: repeat(2,1fr); }
+
+    /* Header actions stack */
+    .vm-header-actions { flex-direction: column; gap: 6px; align-items: stretch; }
+    .vm-header-actions .btn-pdf,
+    .vm-header-actions .modal-close { width: 100%; justify-content: center; }
+
+    /* ── FILTER BUTTONS scroll horizontally ── */
+    div[style*="display:flex;gap:8px"] {
+      overflow-x: auto;
+      flex-wrap: nowrap !important;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
+
+    /* ── TOAST bottom safe area ── */
+    .toast { bottom: 76px; right: 12px; left: 12px; justify-content: center; }
+
+    /* ── RANKING PANEL ── */
+    .rank-list { max-height: none; }
+
+    /* ── GESTOR PANEL ── */
+    .gestor-decision-btns { grid-template-columns: 1fr; }
+
+    /* ── SEARCH / FILTER row ── */
+    .search-filter-row { flex-direction: column; gap: 8px; }
+    .search-filter-row input { width: 100%; }
+
+    /* ── LOGIN ── */
+    .login-cards {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* dbBanner */
+    #dbBanner { font-size: 11px; padding: 8px 12px; }
+
+    /* ── Abas manutenção ── */
+    #tab-tecnicos, #tab-historico {
+      font-size: 12px !important;
+      padding: 8px 12px !important;
+    }
+  }
+
+  /* Small phones */
+  @media (max-width: 380px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-num { font-size: 20px; }
+    .main { padding: 14px 10px; }
+  }
 </style>
 </head>
 <body>
+
+<!-- ── MOBILE TOP BAR ── -->
+<div class="mobile-topbar">
+  <div class="mobile-topbar-title">
+    <div>
+      <div class="mobile-topbar-logo">AutoCheck</div>
+      <span class="mobile-topbar-sub">Painel do Gestor</span>
+    </div>
+  </div>
+  <button class="mobile-menu-btn" onclick="openMobileDrawer()">
+    <i class="ti ti-menu-2"></i>
+  </button>
+</div>
+
+<!-- ── MOBILE DRAWER ── -->
+<div class="mobile-drawer-bg" id="mobileDrawerBg" onclick="closeMobileDrawer()"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="mobile-drawer-header">
+    <div>
+      <div style="font-size:15px;font-weight:700;color:#fff">AutoCheck</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4)">Painel do Gestor</div>
+    </div>
+    <button class="mobile-drawer-close" onclick="closeMobileDrawer()"><i class="ti ti-x"></i></button>
+  </div>
+  <nav style="flex:1;padding:12px 0;overflow-y:auto">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="mobileNav('dashboard',this)">
+      <i class="ti ti-layout-dashboard"></i>Dashboard
+    </div>
+    <div class="nav-item" onclick="mobileNav('checklists',this)">
+      <i class="ti ti-checklist"></i>Checklists
+    </div>
+    <div class="nav-item" onclick="mobileNav('modelos',this)">
+      <i class="ti ti-template"></i>Modelos
+    </div>
+    <div class="nav-section">Gestão</div>
+    <div class="nav-item" onclick="mobileNav('motoristas',this)">
+      <i class="ti ti-users"></i>Motoristas
+    </div>
+    <div class="nav-item" onclick="mobileNav('manutencao',this)">
+      <i class="ti ti-tools"></i>Manutenção
+    </div>
+    <div class="nav-item" onclick="mobileNav('veiculos',this)">
+      <i class="ti ti-car"></i>Veículos
+    </div>
+    <div class="nav-section">Desempenho</div>
+    <div class="nav-item" onclick="mobileNav('ranking',this)">
+      <i class="ti ti-trophy"></i>Ranking
+    </div>
+    <div class="nav-item" onclick="mobileNav('premiacoes',this)">
+      <i class="ti ti-medal"></i>Premiações
+    </div>
+  </nav>
+  <div style="padding:14px 18px;border-top:1px solid rgba(255,255,255,0.07)">
+    <div class="sair-btn" onclick="logoutToLogin()"><i class="ti ti-logout"></i>Sair</div>
+  </div>
+</div>
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+<div class="mobile-bottomnav">
+  <button class="mob-nav-btn active" id="mobnav-dashboard" onclick="mobileNav('dashboard',this,'mobnav-dashboard')">
+    <i class="ti ti-layout-dashboard"></i>Dashboard
+  </button>
+  <button class="mob-nav-btn" id="mobnav-checklists" onclick="mobileNav('checklists',this,'mobnav-checklists')">
+    <i class="ti ti-checklist"></i>Checklists
+  </button>
+  <button class="mob-nav-btn" id="mobnav-motoristas" onclick="mobileNav('motoristas',this,'mobnav-motoristas')">
+    <i class="ti ti-users"></i>Motoristas
+  </button>
+  <button class="mob-nav-btn" id="mobnav-veiculos" onclick="mobileNav('veiculos',this,'mobnav-veiculos')">
+    <i class="ti ti-car"></i>Veículos
+  </button>
+  <button class="mob-nav-btn" id="mobnav-more" onclick="openMobileDrawer()">
+    <i class="ti ti-dots"></i>Mais
+  </button>
+</div>
 
 <!-- Banner: Supabase não configurado -->
 <div id="dbBanner">
@@ -1631,6 +2039,22 @@
     <div class="page-title">Dashboard</div>
     <div class="page-sub">Visão geral do sistema</div>
 
+    <!-- ALERTAS DE DEVOLUÇÃO PENDENTE -->
+    <div id="alertasDevolucaoPanel" style="display:none;background:rgba(220,38,38,.1);
+      border:1.5px solid rgba(220,38,38,.4);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <i class="ti ti-alert-triangle" style="font-size:18px;color:#f87171"></i>
+        <span style="font-size:14px;font-weight:700;color:#fca5a5">Devoluções Pendentes</span>
+        <span id="alertasDevolucaoBadge" style="background:#dc2626;color:#fff;font-size:11px;
+          font-weight:700;padding:1px 7px;border-radius:20px;margin-left:4px"></span>
+        <button onclick="limparAlertasDevolucao()" style="margin-left:auto;background:none;border:none;
+          cursor:pointer;color:rgba(255,255,255,.4);font-size:11px;font-family:inherit;font-weight:600">
+          ✕ Limpar
+        </button>
+      </div>
+      <div id="alertasDevolucaoLista" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div>
@@ -1686,7 +2110,7 @@
 
       <div class="chart-card">
         <div class="card-title">Veículos com Mais Vistorias</div>
-        <div class="bar-area" id="barChart"></div>
+        <div class="bar-scroll-wrap"><div class="bar-area" id="barChart"></div></div>
       </div>
 
       <div class="chart-card">
@@ -1707,8 +2131,8 @@
 
       <div class="trend-chart">
         <div class="card-title"><i class="ti ti-chart-bar" style="color:var(--accent)"></i>Pontuação por Checklist</div>
-        <div class="trend-bars" id="trendBars"></div>
-        <div style="display:flex;gap:4px;margin-top:4px" id="trendLabels"></div>
+        <div class="trend-scroll-wrap"><div class="trend-bars" id="trendBars"></div>
+        <div style="display:flex;gap:5px;margin-top:4px;padding:0 2px" id="trendLabels"></div></div>
         <div class="trend-score-row">
           <div class="trend-stat">
             <div class="trend-stat-val" id="t-max">—</div>
@@ -1770,6 +2194,7 @@
             <th>Motorista</th>
             <th>Veículo</th>
             <th>Data</th>
+            <th>Tipo</th>
             <th>Pontuação</th>
             <th>Status</th>
             <th>Ações</th>
@@ -2308,7 +2733,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px" id="appStats"></div>
 
     <!-- New checklist button -->
-    <button onclick="appEscolherModelo()" style="width:100%;padding:15px;
+    <button onclick="appIrParaTipoVistoria()" style="width:100%;padding:15px;
       background:linear-gradient(135deg,var(--accent) 0%,#3b6fd4 100%);
       color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;
       cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;
@@ -2321,6 +2746,79 @@
     <div id="appRecentLabel" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);
       text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Vistorias Recentes</div>
     <div id="appRecentList" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <!-- APP TIPO DE VISTORIA (Retirada / Devolução) -->
+  <div id="appTipoScreen" style="display:none;max-width:480px;margin:0 auto;padding:20px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+      <button onclick="appBackToHome()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+        color:rgba(255,255,255,.7);border-radius:8px;padding:8px 12px;cursor:pointer;font-family:inherit">
+        <i class="ti ti-arrow-left"></i>
+      </button>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#fff">Tipo de Vistoria</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45)">Selecione o tipo antes de prosseguir</div>
+      </div>
+    </div>
+
+    <!-- Alerta de devolução pendente -->
+    <div id="appAlertDevolucao" style="display:none;background:rgba(220,38,38,.15);border:1.5px solid rgba(220,38,38,.5);
+      border-radius:12px;padding:14px 16px;margin-bottom:18px">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <i class="ti ti-alert-triangle" style="font-size:20px;color:#f87171;flex-shrink:0;margin-top:1px"></i>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#fca5a5">Devolução pendente!</div>
+          <div id="appAlertDevolucaoMsg" style="font-size:12px;color:rgba(255,255,255,.65);margin-top:3px;line-height:1.5"></div>
+          <div style="font-size:11px;color:rgba(220,38,38,.8);margin-top:6px;font-weight:600">
+            ⚠️ O gestor será notificado desta irregularidade.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <!-- Retirada -->
+      <div onclick="appSelecionarTipo('retirada')"
+        style="background:rgba(79,142,247,.12);border:2px solid rgba(79,142,247,.35);border-radius:16px;
+          padding:22px 20px;cursor:pointer;transition:all .18s;user-select:none"
+        onmouseover="this.style.background='rgba(79,142,247,.22)';this.style.borderColor='rgba(79,142,247,.7)'"
+        onmouseout="this.style.background='rgba(79,142,247,.12)';this.style.borderColor='rgba(79,142,247,.35)'">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:52px;height:52px;border-radius:14px;background:rgba(79,142,247,.25);
+            display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-key" style="font-size:26px;color:#60a5fa"></i>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:17px;font-weight:800;color:#fff">Retirada</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:3px">
+              Vistoria ao retirar o veículo
+            </div>
+          </div>
+          <i class="ti ti-chevron-right" style="color:rgba(79,142,247,.6);font-size:20px"></i>
+        </div>
+      </div>
+
+      <!-- Devolução -->
+      <div onclick="appSelecionarTipo('devolucao')"
+        style="background:rgba(22,163,74,.12);border:2px solid rgba(22,163,74,.35);border-radius:16px;
+          padding:22px 20px;cursor:pointer;transition:all .18s;user-select:none"
+        onmouseover="this.style.background='rgba(22,163,74,.22)';this.style.borderColor='rgba(22,163,74,.7)'"
+        onmouseout="this.style.background='rgba(22,163,74,.12)';this.style.borderColor='rgba(22,163,74,.35)'">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:52px;height:52px;border-radius:14px;background:rgba(22,163,74,.25);
+            display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-car-garage" style="font-size:26px;color:#4ade80"></i>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:17px;font-weight:800;color:#fff">Devolução</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:3px">
+              Vistoria ao devolver o veículo
+            </div>
+          </div>
+          <i class="ti ti-chevron-right" style="color:rgba(22,163,74,.6);font-size:20px"></i>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- APP SELEÇÃO DE MODELO -->
@@ -2352,22 +2850,66 @@
       </div>
     </div>
 
-    <!-- Vehicle select -->
+    <!-- Vehicle search -->
     <div style="background:rgba(255,255,255,.07);border-radius:12px;padding:16px;margin-bottom:14px;
       border:1px solid rgba(255,255,255,.1)">
       <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);
         text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Veículo</label>
-      <select id="appVeiculo" style="width:100%;padding:10px 12px;border-radius:8px;
-        border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;
-        font-size:13px;font-family:inherit;outline:none"
-        onfocus="this.style.borderColor='var(--accent)'"
-        onblur="this.style.borderColor='rgba(255,255,255,.15)'">
-        <option value="" style="background:#1c2f58">Selecione o veículo...</option>
-        <option value="HHA1150" style="background:#1c2f58">HHA1150 — Fiat Strada 2022</option>
-        <option value="ABC1D23" style="background:#1c2f58">ABC1D23 — Volkswagen Gol 2021</option>
-        <option value="XYZ4E56" style="background:#1c2f58">XYZ4E56 — Chevrolet S10 2023</option>
-        <option value="QWE7F89" style="background:#1c2f58">QWE7F89 — Toyota Hilux 2020</option>
-      </select>
+
+      <!-- Campo de busca -->
+      <div style="position:relative">
+        <div style="position:relative">
+          <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);
+            color:rgba(255,255,255,.35);font-size:14px;pointer-events:none"></i>
+          <input id="appVeiculoBusca" type="text" placeholder="Digite a placa..." autocomplete="off"
+            style="width:100%;padding:10px 12px 10px 34px;border-radius:8px;box-sizing:border-box;
+              border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;
+              font-size:14px;font-family:inherit;outline:none;letter-spacing:.5px;text-transform:uppercase"
+            onfocus="this.style.borderColor='var(--accent)';appAbrirDropdownVeiculo()"
+            onblur="setTimeout(()=>appFecharDropdownVeiculo(),200)"
+            oninput="appFiltrarVeiculos(this.value)">
+          <button id="appVeiculoBuscaLimpar" onclick="appLimparVeiculo()" style="display:none;
+            position:absolute;right:10px;top:50%;transform:translateY(-50%);
+            background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);font-size:16px;
+            line-height:1;padding:0;font-family:inherit">✕</button>
+        </div>
+
+        <!-- Dropdown de resultados -->
+        <div id="appVeiculoDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;
+          background:#1e3560;border:1.5px solid rgba(79,142,247,.4);border-radius:10px;
+          max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4)">
+          <div id="appVeiculoDropdownList"></div>
+        </div>
+      </div>
+
+      <!-- Veículo selecionado (card) -->
+      <div id="appVeiculoSelecionado" style="display:none;margin-top:10px;
+        background:rgba(79,142,247,.15);border:1.5px solid rgba(79,142,247,.4);
+        border-radius:10px;padding:12px 14px;align-items:center;gap:12px">
+        <i class="ti ti-car" style="font-size:22px;color:var(--accent);flex-shrink:0"></i>
+        <div style="flex:1">
+          <div id="appVeiculoPlacaLabel" style="font-size:15px;font-weight:800;color:#fff;letter-spacing:.5px"></div>
+          <div id="appVeiculoInfoLabel" style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px"></div>
+        </div>
+        <button onclick="appLimparVeiculo()" style="background:none;border:none;cursor:pointer;
+          color:rgba(255,255,255,.35);font-size:12px;font-family:inherit;font-weight:600">✕ Trocar</button>
+      </div>
+
+      <!-- Campo oculto com o valor real -->
+      <input type="hidden" id="appVeiculo">
+    </div>
+
+    <!-- Alerta devolução pendente no form -->
+    <div id="appAlertDevolucaoForm" style="display:none;background:rgba(220,38,38,.15);border:1.5px solid rgba(220,38,38,.5);
+      border-radius:12px;padding:14px 16px;margin-bottom:14px">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <i class="ti ti-alert-triangle" style="font-size:18px;color:#f87171;flex-shrink:0;margin-top:1px"></i>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#fca5a5">⚠️ Devolução pendente detectada</div>
+          <div id="appAlertDevolucaoFormMsg" style="font-size:12px;color:rgba(255,255,255,.65);margin-top:3px;line-height:1.5"></div>
+          <div style="font-size:11px;color:#f87171;margin-top:5px;font-weight:600">O gestor será notificado automaticamente.</div>
+        </div>
+      </div>
     </div>
 
     <!-- Items -->
@@ -2934,15 +3476,23 @@ async function dbLoadChecklists() {
       });
     }
 
+    let loc = null;
+    try { loc = r.localizacao ? JSON.parse(r.localizacao) : null; } catch(e) {}
+    let comentariosGrupos = null;
+    try { comentariosGrupos = r.comentarios_grupos ? JSON.parse(r.comentarios_grupos) : null; } catch(e) {}
+
     checklists.push({
       id: r.id_display, dbId: r.id,
       m: r.motorista_nome, v: r.veiculo_placa,
       d: r.data_vistoria, score: r.score, status: r.status,
       obs: r.observacoes || '', sig: r.assinatura || null,
+      loc: loc,
+      tipoVistoria: r.tipo_vistoria || null,
       gestorDecisao: r.gestor_decisao || null,
       gestorObs: r.gestor_obs || '', gestorData: r.gestor_data || '',
       modeloNome: r.modelo_nome || 'Padrão',
       modeloId: r.modelo_id || null, itensResult: itens,
+      comentariosGrupos: comentariosGrupos,
       fotos: Object.keys(fotos).length ? fotos : null
     });
   });
@@ -3112,17 +3662,20 @@ async function dbSaveChecklist(c) {
 
   // 3. Salva o registro na tabela checklists (sem base64 pesado)
   const payload = {
-    id_display:     c.id,
-    motorista_nome: c.m,
-    veiculo_placa:  c.v,
-    data_vistoria:  c.d,
-    score:          c.score,
-    status:         c.status,
-    observacoes:    c.obs || '',
-    assinatura:     c.sig || null,
-    modelo_nome:    c.modeloNome || 'Padrão',
-    modelo_id:      c.modeloId || null,
-    itens_result:   itensParaSalvar ? JSON.stringify(itensParaSalvar) : null
+    id_display:          c.id,
+    motorista_nome:      c.m,
+    veiculo_placa:       c.v,
+    data_vistoria:       c.d,
+    score:               c.score,
+    status:              c.status,
+    observacoes:         c.obs || '',
+    assinatura:          c.sig || null,
+    modelo_nome:         c.modeloNome || 'Padrão',
+    modelo_id:           c.modeloId || null,
+    itens_result:        itensParaSalvar ? JSON.stringify(itensParaSalvar) : null,
+    localizacao:         c.loc ? JSON.stringify(c.loc) : null,
+    comentarios_grupos:  c.comentariosGrupos ? JSON.stringify(c.comentariosGrupos) : null,
+    tipo_vistoria:       c.tipoVistoria || null
   };
   const data = await dbRun('salvar checklist', () =>
     sb.from('checklists').insert(payload).select().single()
@@ -3350,6 +3903,82 @@ function renderDashboard() {
   drawBar();
   drawTrend();
   renderTopDrivers();
+
+  // Calcular alertas de devolução pendente a partir dos dados reais
+  renderAlertasDevolucao();
+}
+
+function renderAlertasDevolucao() {
+  const panel  = document.getElementById('alertasDevolucaoPanel');
+  const lista  = document.getElementById('alertasDevolucaoLista');
+  const badge  = document.getElementById('alertasDevolucaoBadge');
+  if (!panel || !lista) return;
+
+  // Alertas em memória (registrados em tempo real)
+  const alertas = window._alertasDevolucao || [];
+
+  // Também detectar automaticamente dos checklists: veículos com último registro != devolução
+  const motCls = checklists.filter(c => !c.setor || c.setor === 'motorista');
+  const placas = [...new Set(motCls.map(c => c.v))];
+  const alertasDetectados = [];
+
+  placas.forEach(placa => {
+    const cls = motCls.filter(c => c.v === placa).sort((a, b) => b.id.localeCompare(a.id));
+    if (!cls.length) return;
+    const ultimo = cls[0];
+    if (ultimo.tipoVistoria && ultimo.tipoVistoria !== 'devolucao') {
+      // Verifica se já está na lista
+      const jaExiste = alertas.some(a => a.placa === placa);
+      if (!jaExiste) {
+        alertasDetectados.push({
+          placa, motorista: ultimo.m, data: ultimo.d,
+          tipo: ultimo.tipoVistoria
+        });
+      }
+    }
+  });
+
+  const todos = [...alertas.map(a => ({...a, tipo: a.tipo || 'retirada'})), ...alertasDetectados];
+
+  if (!todos.length) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+  if (badge) badge.textContent = todos.length;
+
+  lista.innerHTML = todos.map((a, i) => `
+    <div style="background:rgba(220,38,38,.12);border-radius:8px;padding:10px 14px;
+      display:flex;align-items:center;gap:10px">
+      <i class="ti ti-car" style="font-size:16px;color:#f87171;flex-shrink:0"></i>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#fca5a5">
+          ${a.placa}
+          <span style="font-size:10px;font-weight:600;background:rgba(220,38,38,.3);padding:1px 6px;
+            border-radius:6px;margin-left:4px">${a.tipo === 'retirada' ? 'Retirada s/ devolução' : 'Pendente'}</span>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">
+          Motorista: <strong style="color:rgba(255,255,255,.85)">${a.motorista}</strong>
+          ${a.data ? ' · ' + a.data : ''}
+        </div>
+      </div>
+      <button onclick="_dismissAlertaDevolucao(${i})" style="background:none;border:none;
+        cursor:pointer;color:rgba(255,255,255,.3);font-size:16px">✕</button>
+    </div>`).join('');
+}
+
+function _dismissAlertaDevolucao(idx) {
+  // Remove o alerta da lista global
+  if (!window._alertasDevolucao) window._alertasDevolucao = [];
+  // Recalcula índice entre os alertas em memória
+  window._alertasDevolucao.splice(idx, 1);
+  renderAlertasDevolucao();
+}
+
+function limparAlertasDevolucao() {
+  window._alertasDevolucao = [];
+  renderAlertasDevolucao();
 }
 
 function drawPie(a, p, r) {
@@ -3411,14 +4040,20 @@ function drawTrend() {
   barsEl.innerHTML = '';
   lblsEl.innerHTML = '';
 
+  const colW = 25; // 20px bar + 5px gap
+  const trendMinW = sorted.length * colW;
+  barsEl.style.minWidth = trendMinW + 'px';
+  lblsEl.style.minWidth = trendMinW + 'px';
+
   sorted.forEach(c => {
-    const h = Math.round((c.score / 100) * 65) + 5;
+    const h = Math.max(4, Math.round((c.score / 100) * 65) + 5);
     const col = c.score >= 70 ? '#16a34a' : c.score >= 40 ? '#d97706' : '#dc2626';
+    const shortId = c.id.replace('#','');
     barsEl.innerHTML += `
       <div class="trend-col">
-        <div class="trend-bar" style="height:${h}px;background:${col};opacity:0.75" title="${c.score}%"></div>
+        <div class="trend-bar" style="height:${h}px;background:${col};opacity:0.8" title="${c.id} — ${c.score}%"></div>
       </div>`;
-    lblsEl.innerHTML += `<div style="flex:1;text-align:center;font-size:9px;color:var(--muted)">${c.id}</div>`;
+    lblsEl.innerHTML += `<div class="trend-col"><span class="trend-lbl" title="${c.id}">${shortId}</span></div>`;
   });
 }
 
@@ -3427,16 +4062,36 @@ function drawBar() {
   checklists.filter(c => !c.setor || c.setor === 'motorista').forEach(c => { counts[c.v] = (counts[c.v] || 0) + 1; });
   const bc = document.getElementById('barChart');
   bc.innerHTML = '';
-  const max = Math.max(...Object.values(counts));
+  if (!Object.keys(counts).length) return;
 
-  Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([v, count]) => {
-    const h = Math.round((count / max) * 110);
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(...sorted.map(e => e[1]));
+
+  // Cada coluna tem 44px + 6px gap; calcula largura total mínima
+  const colW = 50; // 44px + 6px gap
+  const totalW = sorted.length * colW;
+  bc.style.minWidth = totalW + 'px';
+
+  sorted.forEach(([v, count]) => {
+    // Barra: altura proporcional dentro de 120px (deixa 52px p/ label)
+    const h = Math.max(6, Math.round((count / max) * 112));
+    // Cor baseada no volume relativo
+    const pct = count / max;
+    const color = pct > 0.66
+      ? 'linear-gradient(180deg,var(--accent) 0%,var(--navy2) 100%)'
+      : pct > 0.33
+      ? 'linear-gradient(180deg,#7db8fb 0%,var(--navy3) 100%)'
+      : 'linear-gradient(180deg,#a8c8fd 0%,#2a3f6e 100%)';
+
+    // Trunca placa para exibição (max 8 chars)
+    const lbl = v.length > 8 ? v.slice(0, 7) + '…' : v;
+
     bc.innerHTML += `
       <div class="bar-col">
-        <div class="bar" style="height:${h}px">
-          <div class="bar-tip">${count} vistoria${count > 1 ? 's' : ''}</div>
+        <div class="bar" style="height:${h}px;background:${color}" title="${v}: ${count} vistoria${count>1?'s':''}">
+          <div class="bar-tip">${v}<br>${count} vistoria${count > 1 ? 's' : ''}</div>
         </div>
-        <div class="bar-lbl">${v}</div>
+        <div class="bar-lbl" title="${v}">${lbl}</div>
       </div>`;
   });
 }
@@ -3465,7 +4120,7 @@ function renderTable(filter) {
 
   const tbody = document.getElementById('checklistTable');
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="ti ti-clipboard-x"></i>Nenhum checklist encontrado.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="ti ti-clipboard-x"></i>Nenhum checklist encontrado.</div></td></tr>`;
     updateBulkDeleteBtn();
     return;
   }
@@ -3481,6 +4136,13 @@ function renderTable(filter) {
       <td>${c.m}</td>
       <td>${c.v}</td>
       <td>${c.d}</td>
+      <td>
+        ${c.tipoVistoria === 'retirada'
+          ? `<span style="font-size:10px;font-weight:700;background:rgba(79,142,247,.15);color:#60a5fa;padding:2px 8px;border-radius:10px">🔑 Retirada</span>`
+          : c.tipoVistoria === 'devolucao'
+          ? `<span style="font-size:10px;font-weight:700;background:rgba(22,163,74,.15);color:#4ade80;padding:2px 8px;border-radius:10px">🏠 Devolução</span>`
+          : `<span style="font-size:10px;color:var(--muted)">—</span>`}
+      </td>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
           <div style="flex:1;height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden">
@@ -4051,8 +4713,207 @@ function showAppHome() {
 
 let appModeloSelecionado = null; // the modelo object chosen by driver
 
+// ── BUSCA DE VEÍCULO (AUTOCOMPLETE) ──────────────────────────────────────
+
+function appAbrirDropdownVeiculo() {
+  const busca = document.getElementById('appVeiculoBusca');
+  // Se já tem veículo selecionado, não abre o dropdown
+  if (document.getElementById('appVeiculo').value) return;
+  appFiltrarVeiculos(busca ? busca.value : '');
+}
+
+function appFecharDropdownVeiculo() {
+  const dd = document.getElementById('appVeiculoDropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+function appFiltrarVeiculos(query) {
+  const dd   = document.getElementById('appVeiculoDropdown');
+  const list = document.getElementById('appVeiculoDropdownList');
+  if (!dd || !list) return;
+
+  const q = (query || '').toUpperCase().trim();
+
+  // Filtra veículos ativos
+  const disponiveis = veiculos.filter(v => v.ativo !== false);
+  const filtrados = q
+    ? disponiveis.filter(v =>
+        v.placa.toUpperCase().includes(q) ||
+        (v.modelo || '').toUpperCase().includes(q) ||
+        (v.tipo  || '').toUpperCase().includes(q))
+    : disponiveis;
+
+  if (!filtrados.length) {
+    list.innerHTML = `
+      <div style="padding:16px;text-align:center;color:rgba(255,255,255,.35);font-size:13px">
+        <i class="ti ti-car-off" style="font-size:20px;display:block;margin-bottom:6px;opacity:.4"></i>
+        Nenhum veículo encontrado
+      </div>`;
+    dd.style.display = 'block';
+    return;
+  }
+
+  list.innerHTML = filtrados.map(v => `
+    <div onclick="appSelecionarVeiculo('${v.placa}')"
+      style="display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;
+        border-bottom:1px solid rgba(255,255,255,.06);transition:background .12s"
+      onmouseover="this.style.background='rgba(79,142,247,.2)'"
+      onmouseout="this.style.background='transparent'">
+      <div style="width:38px;height:38px;border-radius:9px;background:rgba(79,142,247,.2);
+        display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ti-car" style="font-size:18px;color:var(--accent)"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:800;color:#fff;letter-spacing:.5px">
+          ${_highlight(v.placa, q)}
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:1px">
+          ${v.modelo || ''}${v.ano ? ' · ' + v.ano : ''}${v.tipo ? ' · ' + v.tipo : ''}
+        </div>
+      </div>
+      <i class="ti ti-chevron-right" style="color:rgba(255,255,255,.25);font-size:14px"></i>
+    </div>`).join('');
+
+  dd.style.display = 'block';
+}
+
+function _highlight(text, query) {
+  if (!query) return text;
+  const idx = text.toUpperCase().indexOf(query.toUpperCase());
+  if (idx < 0) return text;
+  return text.slice(0, idx) +
+    `<span style="background:rgba(79,142,247,.4);border-radius:3px;padding:0 2px">${text.slice(idx, idx + query.length)}</span>` +
+    text.slice(idx + query.length);
+}
+
+function appSelecionarVeiculo(placa) {
+  const v = veiculos.find(x => x.placa === placa);
+
+  // Preenche o hidden field
+  document.getElementById('appVeiculo').value = placa;
+
+  // Oculta busca e mostra card
+  const busca = document.getElementById('appVeiculoBusca');
+  if (busca) { busca.value = placa; busca.style.display = 'none'; }
+
+  const limpar = document.getElementById('appVeiculoBuscaLimpar');
+  if (limpar) limpar.style.display = 'none';
+
+  const dd = document.getElementById('appVeiculoDropdown');
+  if (dd) dd.style.display = 'none';
+
+  const card = document.getElementById('appVeiculoSelecionado');
+  if (card) {
+    card.style.display = 'flex';
+    document.getElementById('appVeiculoPlacaLabel').textContent = placa;
+    document.getElementById('appVeiculoInfoLabel').textContent =
+      v ? `${v.modelo || ''}${v.ano ? ' · ' + v.ano : ''}${v.tipo ? ' · ' + v.tipo : ''}` : '';
+  }
+
+  // Verifica devolução pendente
+  appVerificarDevolucaoPendente(placa);
+}
+
+function appLimparVeiculo() {
+  document.getElementById('appVeiculo').value = '';
+
+  const busca = document.getElementById('appVeiculoBusca');
+  if (busca) { busca.value = ''; busca.style.display = 'block'; busca.focus(); }
+
+  const limpar = document.getElementById('appVeiculoBuscaLimpar');
+  if (limpar) limpar.style.display = 'none';
+
+  const card = document.getElementById('appVeiculoSelecionado');
+  if (card) card.style.display = 'none';
+
+  const alertForm = document.getElementById('appAlertDevolucaoForm');
+  if (alertForm) alertForm.style.display = 'none';
+
+  appFiltrarVeiculos('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+let appTipoVistoria = null; // 'retirada' | 'devolucao'
+
+function appIrParaTipoVistoria() {
+  // Para manutenção, pula a tela de tipo
+  if (appCurrentManutencao) { appEscolherModelo(); return; }
+
+  appTipoVistoria = null;
+  document.getElementById('appHome').style.display = 'none';
+  document.getElementById('appTipoScreen').style.display = 'block';
+  document.getElementById('appAlertDevolucao').style.display = 'none';
+}
+
+function appSelecionarTipo(tipo) {
+  appTipoVistoria = tipo;
+
+  if (tipo === 'retirada') {
+    // Verificar se o veículo selecionado tem devolução pendente
+    // (será verificado após selecionar o veículo — avança direto para modelos)
+    appEscolherModelo();
+    return;
+  }
+
+  // Devolução — avança para modelos normalmente
+  appEscolherModelo();
+}
+
+// Chamada após o motorista selecionar o veículo no form
+function appVerificarDevolucaoPendente(placa) {
+  // Ocultar alerta anterior
+  const formAlert    = document.getElementById('appAlertDevolucaoForm');
+  const formAlertMsg = document.getElementById('appAlertDevolucaoFormMsg');
+  if (formAlert) formAlert.style.display = 'none';
+
+  if (appTipoVistoria !== 'retirada' || !placa) return;
+
+  // Busca o último checklist desse veículo (setor motorista), ordenado do mais recente
+  const clsVeiculo = checklists
+    .filter(c => c.v === placa && (!c.setor || c.setor === 'motorista'))
+    .sort((a, b) => {
+      // Ordena por id_display (#001, #002...) ou por data
+      if (a.id && b.id) return b.id.localeCompare(a.id);
+      return 0;
+    });
+
+  if (!clsVeiculo.length) return; // nenhum histórico, tudo ok
+
+  const ultimo = clsVeiculo[0];
+
+  // Se o último foi devolução, tudo ok
+  if (ultimo.tipoVistoria === 'devolucao') return;
+
+  // Último NÃO foi devolução → alerta
+  const motorista = ultimo.m || 'motorista anterior';
+  const data      = ultimo.d || '';
+  const tipo      = ultimo.tipoVistoria === 'retirada' ? 'retirada' : 'vistoria';
+  const msg       = `O veículo ${placa} foi registrado em ${tipo} por ${motorista}${data ? ' em ' + data : ''} sem vistoria de devolução posterior.`;
+
+  if (formAlert && formAlertMsg) {
+    formAlertMsg.textContent = msg;
+    formAlert.style.display = 'flex';
+  }
+
+  // Registrar alerta para o gestor
+  _registrarAlertaGestor(placa, motorista, data);
+}
+
+function _registrarAlertaGestor(placa, motorista, data) {
+  // Adiciona um alerta à lista global de alertas de devolução pendente
+  if (!window._alertasDevolucao) window._alertasDevolucao = [];
+  const ja = window._alertasDevolucao.find(a => a.placa === placa && a.motorista === motorista);
+  if (!ja) {
+    window._alertasDevolucao.push({ placa, motorista, data, ts: new Date().toISOString() });
+    // Re-renderiza badge de alertas no gestor se existir
+    if (typeof renderAlertasDevolucao === 'function') renderAlertasDevolucao();
+  }
+}
+
 function appEscolherModelo() {
   document.getElementById('appHome').style.display = 'none';
+  document.getElementById('appTipoScreen').style.display = 'none';
   document.getElementById('appModeloScreen').style.display = 'block';
 
   // Filtra modelos pelo setor do usuário logado
@@ -4110,7 +4971,14 @@ function appSelecionarModelo(modeloId) {
 
 function appVoltarParaModelos() {
   document.getElementById('appChecklistForm').style.display = 'none';
-  appEscolherModelo();
+  // Se é motorista, volta para tela de tipo; se manutenção, vai direto para modelos
+  if (!appCurrentManutencao) {
+    document.getElementById('appModeloScreen').style.display = 'none';
+    document.getElementById('appTipoScreen').style.display = 'block';
+    document.getElementById('appAlertDevolucao').style.display = 'none';
+  } else {
+    appEscolherModelo();
+  }
 }
 
 function appStartChecklist() {
@@ -4122,11 +4990,25 @@ function appStartChecklist() {
   if (typeof appItemStatus !== 'undefined') Object.keys(appItemStatus).forEach(k => delete appItemStatus[k]);
   if (typeof appItemPhotosMulti !== 'undefined') Object.keys(appItemPhotosMulti).forEach(k => delete appItemPhotosMulti[k]);
 
-  // Show selected model name in subtitle
-  if (appModeloSelecionado) {
-    document.getElementById('appChecklistSubtitle').textContent =
-      `Modelo: ${appModeloSelecionado.nome}`;
-  }
+  // Resetar autocomplete de veículo
+  const busca = document.getElementById('appVeiculoBusca');
+  if (busca) { busca.value = ''; busca.style.display = 'block'; }
+  const card = document.getElementById('appVeiculoSelecionado');
+  if (card) card.style.display = 'none';
+  const dd = document.getElementById('appVeiculoDropdown');
+  if (dd) dd.style.display = 'none';
+  const limpar = document.getElementById('appVeiculoBuscaLimpar');
+  if (limpar) limpar.style.display = 'none';
+
+  // Mostrar tipo de vistoria no subtítulo
+  const tipoLabel = appTipoVistoria === 'retirada' ? '🔑 Retirada' : appTipoVistoria === 'devolucao' ? '🏠 Devolução' : '';
+  const modeloLabel = appModeloSelecionado ? `Modelo: ${appModeloSelecionado.nome}` : 'Preencha todos os itens';
+  document.getElementById('appChecklistSubtitle').textContent =
+    tipoLabel ? `${tipoLabel} · ${modeloLabel}` : modeloLabel;
+
+  // Ocultar alerta
+  const alertForm = document.getElementById('appAlertDevolucaoForm');
+  if (alertForm) alertForm.style.display = 'none';
 
   renderAppItems();
   setTimeout(initAppSig, 150);
@@ -4135,7 +5017,9 @@ function appStartChecklist() {
 function appBackToHome() {
   document.getElementById('appChecklistForm').style.display = 'none';
   document.getElementById('appModeloScreen').style.display = 'none';
+  document.getElementById('appTipoScreen').style.display = 'none';
   appModeloSelecionado = null;
+  appTipoVistoria = null;
   showAppHome();
 }
 
@@ -4194,22 +5078,31 @@ function renderAppItems() {
           </span>
           <span style="font-size:10px;color:rgba(255,255,255,.3)">+${item.pts||10}pts</span>
         </div>
-        <!-- Conforme / Não Conforme buttons -->
+        <!-- Conforme / Não Conforme / N/A buttons -->
         <div style="display:flex;gap:8px;margin-bottom:${numFotos>0?'10px':'0'}">
           <button id="btn-conf-${i}" onclick="setAppItemStatus(${i},'conforme')"
-            style="flex:1;padding:9px 10px;border-radius:8px;border:1.5px solid rgba(22,163,74,.4);
-              background:transparent;color:rgba(22,163,74,.7);font-size:12px;font-weight:700;
+            style="flex:1;padding:9px 8px;border-radius:8px;border:1.5px solid rgba(22,163,74,.4);
+              background:transparent;color:rgba(22,163,74,.7);font-size:11px;font-weight:700;
               cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;
-              justify-content:center;gap:5px">
-            <i class="ti ti-circle-check" style="font-size:14px"></i> Conforme
+              justify-content:center;gap:4px">
+            <i class="ti ti-circle-check" style="font-size:13px"></i> Conforme
           </button>
           <button id="btn-nconf-${i}" onclick="setAppItemStatus(${i},'naoconforme')"
-            style="flex:1;padding:9px 10px;border-radius:8px;border:1.5px solid rgba(220,38,38,.4);
-              background:transparent;color:rgba(220,38,38,.7);font-size:12px;font-weight:700;
+            style="flex:1;padding:9px 8px;border-radius:8px;border:1.5px solid rgba(220,38,38,.4);
+              background:transparent;color:rgba(220,38,38,.7);font-size:11px;font-weight:700;
               cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;
-              justify-content:center;gap:5px">
-            <i class="ti ti-circle-x" style="font-size:14px"></i> Não Conforme
+              justify-content:center;gap:4px">
+            <i class="ti ti-circle-x" style="font-size:13px"></i> Não Conforme
           </button>
+          ${item.podeSerNA !== false ? `
+          <button id="btn-na-${i}" onclick="setAppItemStatus(${i},'na')"
+            style="padding:9px 10px;border-radius:8px;border:1.5px solid rgba(100,116,139,.3);
+              background:transparent;color:rgba(100,116,139,.6);font-size:11px;font-weight:700;
+              cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;
+              justify-content:center;gap:4px;white-space:nowrap"
+            title="Este item não se aplica a este veículo/situação">
+            <i class="ti ti-minus" style="font-size:13px"></i> N/A
+          </button>` : ''}
         </div>
         <!-- Photo slots (shown for any status when numFotos > 0) -->
         ${numFotos > 0 ? `
@@ -4223,6 +5116,27 @@ function renderAppItems() {
       </div>`;
     }).join('');
 
+    const grupoKey = g.nome ? g.nome.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'') : `grupo_${gruposRender.indexOf(g)}`;
+    const commentField = `
+      <div style="padding:10px 14px 12px;border-top:1px solid rgba(255,255,255,.07)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <i class="ti ti-message-2" style="font-size:12px;color:rgba(255,255,255,.35)"></i>
+          <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.4px">
+            Comentário${g.nome ? ' — ' + g.nome : ''} <span style="font-weight:400;font-style:italic">(opcional)</span>
+          </span>
+        </div>
+        <textarea id="comentario-grupo-${grupoKey}"
+          placeholder="Observações sobre este grupo..."
+          rows="2"
+          style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+            border-radius:8px;padding:9px 12px;font-size:12px;color:#fff;font-family:inherit;
+            resize:vertical;outline:none;box-sizing:border-box;transition:border-color .15s;
+            line-height:1.5;min-height:60px"
+          onfocus="this.style.borderColor='var(--accent)'"
+          onblur="this.style.borderColor='rgba(255,255,255,.12)'"
+        ></textarea>
+      </div>`;
+
     return g.nome ? `
       <div style="margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:7px;padding:10px 14px 8px;
@@ -4235,16 +5149,26 @@ function renderAppItems() {
         <div style="background:rgba(255,255,255,.05);border-radius:0 0 10px 10px;
           border:1px solid rgba(79,142,247,.15);border-top:none;overflow:hidden">
           ${itemsHtml}
+          ${commentField}
         </div>
       </div>` : `<div style="background:rgba(255,255,255,.05);border-radius:10px;overflow:hidden;
-        border:1px solid rgba(255,255,255,.1)">${itemsHtml}</div>`;
+        border:1px solid rgba(255,255,255,.1)">${itemsHtml}${commentField}</div>`;
   }).join('');
 
   // store flat source for save
   window._appItemsFlat = gruposRender.flatMap(g => g.itens.map(it => ({
-    name: it.nome||it.name, pts: it.pts||10, numFotos: it.numFotos||(it.requirePhoto?1:0)||0,
-    critico: it.critico||false, cat: g.nome||it.cat||''
+    name:      it.nome||it.name,
+    pts:       it.pts||10,
+    numFotos:  it.numFotos||(it.requirePhoto?1:0)||0,
+    critico:   it.critico||false,
+    cat:       g.nome||it.cat||'',
+    podeSerNA: it.podeSerNA !== false
   })));
+  // Salva lista de grupos para coleta de comentários ao salvar
+  window._appGruposRender = gruposRender.map(g => ({
+    nome:     g.nome,
+    grupoKey: g.nome ? g.nome.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'') : `grupo_${gruposRender.indexOf(g)}`
+  }));
 }
 
 // appItemStatus: { i: 'conforme'|'naoconforme' }
@@ -4256,25 +5180,24 @@ function setAppItemStatus(i, status) {
   appItemStatus[i] = status;
   const btnC  = document.getElementById(`btn-conf-${i}`);
   const btnNC = document.getElementById(`btn-nconf-${i}`);
+  const btnNA = document.getElementById(`btn-na-${i}`);
   const zone  = document.getElementById(`appphotozone-${i}`);
 
+  // Reset todos para estilo inativo
+  if (btnC)  { btnC.style.background  = 'transparent'; btnC.style.color  = 'rgba(22,163,74,.7)';  btnC.style.borderColor  = 'rgba(22,163,74,.4)'; }
+  if (btnNC) { btnNC.style.background = 'transparent'; btnNC.style.color = 'rgba(220,38,38,.7)'; btnNC.style.borderColor = 'rgba(220,38,38,.4)'; }
+  if (btnNA) { btnNA.style.background = 'transparent'; btnNA.style.color = 'rgba(100,116,139,.6)'; btnNA.style.borderColor = 'rgba(100,116,139,.3)'; }
+
   if (status === 'conforme') {
-    btnC.style.background  = '#16a34a';
-    btnC.style.color       = '#fff';
-    btnC.style.borderColor = '#16a34a';
-    btnNC.style.background  = 'transparent';
-    btnNC.style.color       = 'rgba(220,38,38,.7)';
-    btnNC.style.borderColor = 'rgba(220,38,38,.4)';
-  } else {
-    btnNC.style.background  = '#dc2626';
-    btnNC.style.color       = '#fff';
-    btnNC.style.borderColor = '#dc2626';
-    btnC.style.background  = 'transparent';
-    btnC.style.color       = 'rgba(22,163,74,.7)';
-    btnC.style.borderColor = 'rgba(22,163,74,.4)';
+    if (btnC) { btnC.style.background = '#16a34a'; btnC.style.color = '#fff'; btnC.style.borderColor = '#16a34a'; }
+  } else if (status === 'naoconforme') {
+    if (btnNC) { btnNC.style.background = '#dc2626'; btnNC.style.color = '#fff'; btnNC.style.borderColor = '#dc2626'; }
+  } else if (status === 'na') {
+    if (btnNA) { btnNA.style.background = '#64748b'; btnNA.style.color = '#fff'; btnNA.style.borderColor = '#64748b'; }
   }
-  // Always show photo zone when any status is selected (if item has required photos)
-  if (zone) zone.style.display = 'block';
+
+  // N/A oculta a zona de fotos; conforme/naoconforme exibe
+  if (zone) zone.style.display = (status === 'na') ? 'none' : 'block';
 }
 
 function handleAppPhotoMulti(i, fi, input) {
@@ -4429,7 +5352,7 @@ function appSaveChecklist() {
   // Validate: all items must have a status
   const missing = source.findIndex((_, i) => !appItemStatus[i]);
   if (missing >= 0) {
-    appToast(`Marque "Conforme" ou "Não Conforme" em todos os itens!`, true); return;
+    appToast(`Marque "Conforme", "Não Conforme" ou "N/A" em todos os itens!`, true); return;
   }
 
   // Validate required photos
@@ -4443,22 +5366,24 @@ function appSaveChecklist() {
   });
   if (missingPhoto) { appToast(`Foto obrigatória: "${missingPhoto}"`, true); return; }
 
-  // Score: conforme = pontos cheios
-  const totalPts   = source.reduce((s, it) => s + (it.pts || 10), 0);
-  const checkedPts = source.reduce((s, it, i) => s + (appItemStatus[i]==='conforme' ? (it.pts||10) : 0), 0);
+  // Score: conforme = pontos cheios; N/A = excluído do cálculo (nem soma nem penaliza)
+  const totalPts   = source.reduce((s, it, i) => appItemStatus[i] === 'na' ? s : s + (it.pts || 10), 0);
+  const checkedPts = source.reduce((s, it, i) => s + (appItemStatus[i] === 'conforme' ? (it.pts||10) : 0), 0);
   const score  = totalPts ? Math.round((checkedPts / totalPts) * 100) : 0;
   const status = score >= 70 ? 'Aprovado' : score >= 40 ? 'Pendente' : 'Reprovado';
 
-  const now = new Date();
-  const d   = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
-  const id  = '#' + String(checklists.length + 1).padStart(3, '0');
-
+  // Captura assinatura e dados antes da geolocalização (async)
   const canvas = document.getElementById('appSigCanvas');
   const sig = appSigHasContent && canvas ? canvas.toDataURL('image/png') : null;
 
-  // Collect photos
   const savedPhotos = {};
   Object.keys(appItemPhotosMulti).forEach(k => { savedPhotos[k] = { ...appItemPhotosMulti[k] }; });
+
+  const comentariosGrupos = {};
+  (window._appGruposRender || []).forEach(g => {
+    const el = document.getElementById(`comentario-grupo-${g.grupoKey}`);
+    if (el && el.value.trim()) comentariosGrupos[g.nome || g.grupoKey] = el.value.trim();
+  });
 
   const itensResult = source.map((item, i) => ({
     nome:    item.name,
@@ -4470,40 +5395,63 @@ function appSaveChecklist() {
     foto:    appItemPhotosMulti[`${i}-0`] ? appItemPhotosMulti[`${i}-0`].dataUrl : null
   }));
 
-  const newCL = {
-    id, m: appCurrentDriver.n, v: veiculo, d, score, status,
-    obs: document.getElementById('appObs').value,
-    sig, fotos: savedPhotos,
-    modeloNome:  appModeloSelecionado ? appModeloSelecionado.nome : 'Padrão',
-    modeloId:    appModeloSelecionado ? appModeloSelecionado.id   : null,
-    itensResult: itensResult,
-    setor: appCurrentManutencao ? 'manutencao' : 'motorista'
-  };
-  checklists.push(newCL);
+  const obsVal = document.getElementById('appObs').value;
+  const clLength = checklists.length;
 
-  // Update vehicle last checklist date
-  const vObj = veiculos.find(x => x.placa === veiculo);
-  if (vObj) { vObj.ultimo = d; dbUpdateVeiculoUltimo(veiculo, d); }
+  function _finalizarSalvamento(loc) {
+    const now = new Date();
+    const d = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const id = '#' + String(clLength + 1).padStart(3, '0');
 
-  // Update driver stats only for motorista sector
-  if (!appCurrentManutencao) {
-    const dr = drivers.find(x => x.n === appCurrentDriver.n);
-    if (dr) {
-      dr.c = (dr.c||0)+1; dr.p = (dr.p||0) + score;
-      dbSaveMotorista(dr);
+    const newCL = {
+      id, m: appCurrentDriver.n, v: veiculo, d, score, status,
+      loc: loc || null,
+      tipoVistoria: appTipoVistoria || null,
+      obs: obsVal,
+      sig, fotos: savedPhotos,
+      comentariosGrupos: Object.keys(comentariosGrupos).length ? comentariosGrupos : null,
+      modeloNome:  appModeloSelecionado ? appModeloSelecionado.nome : 'Padrão',
+      modeloId:    appModeloSelecionado ? appModeloSelecionado.id   : null,
+      itensResult: itensResult,
+      setor: appCurrentManutencao ? 'manutencao' : 'motorista'
+    };
+    checklists.push(newCL);
+
+    const vObj = veiculos.find(x => x.placa === veiculo);
+    if (vObj) { vObj.ultimo = d; dbUpdateVeiculoUltimo(veiculo, d); }
+
+    if (!appCurrentManutencao) {
+      const dr = drivers.find(x => x.n === appCurrentDriver.n);
+      if (dr) { dr.c = (dr.c||0)+1; dr.p = (dr.p||0) + score; dbSaveMotorista(dr); }
     }
+
+    dbSaveChecklist(newCL).then(dbId => { if (dbId) newCL.dbId = dbId; });
+
+    Object.keys(appItemStatus).forEach(k => delete appItemStatus[k]);
+    Object.keys(appItemPhotosMulti).forEach(k => delete appItemPhotosMulti[k]);
+    window._appGruposRender = [];
+    appModeloSelecionado = null;
+    appTipoVistoria = null;
+    renderTable(); renderDashboard();
+
+    appToast('Vistoria enviada com sucesso! ✓');
+    setTimeout(() => { appBackToHome(); }, 1200);
   }
 
-  dbSaveChecklist(newCL).then(dbId => { if (dbId) newCL.dbId = dbId; });
-
-  // Reset state
-  Object.keys(appItemStatus).forEach(k => delete appItemStatus[k]);
-  Object.keys(appItemPhotosMulti).forEach(k => delete appItemPhotosMulti[k]);
-  appModeloSelecionado = null;
-  renderTable(); renderDashboard();
-
-  appToast('Vistoria enviada com sucesso! ✓');
-  setTimeout(() => { appBackToHome(); }, 1200);
+  if (navigator.geolocation) {
+    appToast('Obtendo localização...', false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        _finalizarSalvamento({ lat, lng, label: `${lat}, ${lng}` });
+      },
+      () => { _finalizarSalvamento(null); },
+      { timeout: 5000, maximumAge: 60000 }
+    );
+  } else {
+    _finalizarSalvamento(null);
+  }
 }
 
 function appToast(msg, err) {
@@ -4680,14 +5628,8 @@ function populateVeiculoSelect() {
     ).join('');
   sel.value = cur; // restore selection if still valid
 
-  // Also update app motorista select
-  const appSel = document.getElementById('appVeiculo');
-  if (appSel) {
-    appSel.innerHTML = '<option value="" style="background:#1c2f58">Selecione o veículo...</option>' +
-      veiculos.filter(v => v.ativo !== false).map(v =>
-        `<option value="${v.placa}" style="background:#1c2f58">${v.placa} — ${v.modelo}${v.ano?' '+v.ano:''}</option>`
-      ).join('');
-  }
+  // Atualiza a lista do autocomplete do app (não é mais um <select>)
+  // Os dados ficam no array global `veiculos` — appFiltrarVeiculos lê diretamente
 }
 
 // ── RANKING ──
@@ -5214,6 +6156,14 @@ function renderMmGrupos() {
                 <div class="toggle-track ${it.ativo!==false?'on':''}"><div class="toggle-thumb"></div></div>
                 <span class="toggle-label">Ativo</span>
               </div>
+              <!-- Permite N/A toggle -->
+              <div class="toggle-wrap" onclick="mmItemToggle(${gi},${ii},'podeSerNA')"
+                title="Permite que o executor marque este item como Não Aplicável">
+                <div class="toggle-track ${it.podeSerNA!==false?'on':''}"><div class="toggle-thumb"></div></div>
+                <span class="toggle-label" style="color:${it.podeSerNA!==false?'var(--muted)':'#94a3b8'}">
+                  <i class="ti ti-minus" style="font-size:10px"></i> N/A
+                </span>
+              </div>
             </div>
           </div>`).join('')
         }
@@ -5244,7 +6194,7 @@ function mmRemoveGrupo(gi) {
 }
 
 function addMmItem(gi) {
-  mmGrupos[gi].itens.push({ nome: '', pts: 10, critico: false, numFotos: 0, ativo: true });
+  mmGrupos[gi].itens.push({ nome: '', pts: 10, critico: false, numFotos: 0, ativo: true, podeSerNA: true });
   renderMmGrupos();
   setTimeout(() => {
     const grp = document.getElementById(`mmgrupo-${gi}`);
@@ -5284,7 +6234,7 @@ function saveModelo() {
 
   // Flatten to itens for backward compat (keeps existing code working)
   const itensFlat = gruposValidos.flatMap(g =>
-    g.itens.map(it => ({ nome: it.nome, cat: g.nome, pts: it.pts, critico: it.critico, foto: it.numFotos > 0, numFotos: it.numFotos, ativo: it.ativo }))
+    g.itens.map(it => ({ nome: it.nome, cat: g.nome, pts: it.pts, critico: it.critico, foto: it.numFotos > 0, numFotos: it.numFotos, ativo: it.ativo, podeSerNA: it.podeSerNA !== false }))
   );
 
   if (editingModeloId) {
@@ -5483,7 +6433,7 @@ function saveChecklist() {
   const status = score >= 70 ? 'Aprovado' : score >= 40 ? 'Pendente' : 'Reprovado';
 
   const now = new Date();
-  const d   = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+  const d   = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const id  = '#' + String(checklists.length + 1).padStart(3, '0');
 
   // Snapshot photos
@@ -5610,19 +6560,39 @@ function viewChecklist(id) {
         <div class="vm-meta-label">Data da Vistoria</div>
         <div class="vm-meta-val">${c.d}</div>
       </div>
+      ${c.loc ? `
+      <div class="vm-meta-item">
+        <div class="vm-meta-label">Localização</div>
+        <div class="vm-meta-val" style="font-size:12px">
+          <a href="https://maps.google.com/?q=${c.loc.lat},${c.loc.lng}" target="_blank"
+            style="color:var(--accent);text-decoration:none">
+            <i class="ti ti-map-pin" style="font-size:11px"></i> ${c.loc.label}
+          </a>
+        </div>
+      </div>` : ''}
       <div class="vm-meta-item">
         <div class="vm-meta-label">Modelo/Template</div>
         <div class="vm-meta-val">${modeloNome}</div>
       </div>
+      ${c.tipoVistoria ? `
+      <div class="vm-meta-item">
+        <div class="vm-meta-label">Tipo de Vistoria</div>
+        <div class="vm-meta-val">
+          ${c.tipoVistoria === 'retirada'
+            ? `<span style="background:rgba(79,142,247,.15);color:#60a5fa;padding:3px 10px;border-radius:10px;font-weight:700">🔑 Retirada</span>`
+            : `<span style="background:rgba(22,163,74,.15);color:#4ade80;padding:3px 10px;border-radius:10px;font-weight:700">🏠 Devolução</span>`}
+        </div>
+      </div>` : ''}
     </div>
 
     <!-- Checklist Items -->
     <div class="vm-section-title"><i class="ti ti-list-check" style="margin-right:5px"></i>Itens Vistoriados</div>
     <div class="vm-items">
       ${itensList.map((item, i) => {
-        const tagCls = item.ok ? 'tag-ok' : 'tag-naook';
-        const tagLbl = item.ok ? 'OK' : 'Não OK';
-        const ptsTxt = item.ok ? `+${item.pts || 10} pontos` : `0 pontos`;
+        const isNA   = item.status === 'na';
+        const tagCls = isNA ? 'tag-na' : (item.ok ? 'tag-ok' : 'tag-naook');
+        const tagLbl = isNA ? 'N/A' : (item.ok ? 'OK' : 'Não OK');
+        const ptsTxt = isNA ? 'Não aplicável' : (item.ok ? `+${item.pts || 10} pontos` : `0 pontos`);
         // Suporta: (1) URL do Storage em item.foto, (2) dataUrl em c.fotos[i].dataUrl
         const _fotoRaw = item.foto || (c.fotos && c.fotos[i]);
         const fotoData = _fotoRaw
@@ -5651,6 +6621,19 @@ function viewChecklist(id) {
         </div>`;
       }).join('')}
     </div>
+
+    <!-- Comentários por Grupo -->
+    ${c.comentariosGrupos && Object.keys(c.comentariosGrupos).length ? `
+    <div class="vm-section-title" style="margin-top:18px"><i class="ti ti-message-2" style="margin-right:5px"></i>Comentários por Grupo</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${Object.entries(c.comentariosGrupos).map(([grupo, texto]) => `
+        <div style="background:#f8fafc;border-radius:8px;border:1px solid var(--border);padding:10px 14px">
+          <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">
+            <i class="ti ti-folder" style="font-size:11px;margin-right:3px"></i>${grupo}
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.5">${texto}</div>
+        </div>`).join('')}
+    </div>` : ''}
 
     <!-- Observações -->
     <div class="vm-section-title"><i class="ti ti-message" style="margin-right:5px"></i>Observações do Gestor</div>
@@ -5847,10 +6830,11 @@ function exportPDF() {
           : _fotoRaw)
       : null;
 
-    const tagBg  = item.ok ? '#dcfce7' : '#fee2e2';
-    const tagClr = item.ok ? '#15803d' : '#b91c1c';
-    const tagLbl = item.ok ? 'OK' : 'Não OK';
-    const ptsTxt = item.ok ? `+${item.pts || 10} pontos` : `0 pontos`;
+    const isNA   = item.status === 'na';
+    const tagBg  = isNA ? '#f1f5f9' : (item.ok ? '#dcfce7' : '#fee2e2');
+    const tagClr = isNA ? '#64748b' : (item.ok ? '#15803d' : '#b91c1c');
+    const tagLbl = isNA ? 'N/A' : (item.ok ? 'OK' : 'Não OK');
+    const ptsTxt = isNA ? 'Não aplicável' : (item.ok ? `+${item.pts || 10} pontos` : `0 pontos`);
 
     return `
     <div style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:7px;background:#fff;overflow:hidden">
@@ -5934,10 +6918,22 @@ function exportPDF() {
         <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Data da Vistoria</div>
         <div style="font-size:13px;font-weight:600;color:#111827;margin-top:3px">${c.d}</div>
       </div>
+      ${c.loc ? `
+      <div style="background:#f8fafc;border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Localização</div>
+        <div style="font-size:12px;font-weight:600;color:#2563eb;margin-top:3px">📍 ${c.loc.label}</div>
+      </div>` : ''}
       <div style="background:#f8fafc;border-radius:8px;padding:10px 14px">
         <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Modelo/Template</div>
         <div style="font-size:13px;font-weight:600;color:#111827;margin-top:3px">${modeloNome}</div>
       </div>
+      ${c.tipoVistoria ? `
+      <div style="background:#f8fafc;border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Tipo de Vistoria</div>
+        <div style="font-size:13px;font-weight:700;color:${c.tipoVistoria === 'retirada' ? '#2563eb' : '#16a34a'};margin-top:3px">
+          ${c.tipoVistoria === 'retirada' ? '🔑 Retirada' : '🏠 Devolução'}
+        </div>
+      </div>` : ''}
     </div>
 
     <!-- vm-section-title: Itens -->
@@ -5947,6 +6943,17 @@ function exportPDF() {
     <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:20px">
       ${itemsHTML}
     </div>
+
+    <!-- Comentários por Grupo (PDF) -->
+    ${c.comentariosGrupos && Object.keys(c.comentariosGrupos).length ? `
+    <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">💬 Comentários por Grupo</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+      ${Object.entries(c.comentariosGrupos).map(([grupo, texto]) => `
+        <div style="background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;padding:10px 14px">
+          <div style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">📁 ${grupo}</div>
+          <div style="font-size:13px;color:#111827;line-height:1.5">${texto}</div>
+        </div>`).join('')}
+    </div>` : ''}
 
     <!-- Observações do Gestor -->
     <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">💬 Observações do Gestor</div>
@@ -6159,6 +7166,148 @@ document.getElementById('deleteVeiculoModalBg').addEventListener('click', functi
   renderDashboard();
   renderTable();
 })();
+
+// ══════════════════════════════════════════
+// MOBILE NAVIGATION & DRAWER
+// ══════════════════════════════════════════
+
+function openMobileDrawer() {
+  document.getElementById('mobileDrawer').classList.add('open');
+  document.getElementById('mobileDrawerBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileDrawer() {
+  document.getElementById('mobileDrawer').classList.remove('open');
+  document.getElementById('mobileDrawerBg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function mobileNav(page, el, bottomNavId) {
+  // Navigate to the page using existing showPage
+  const fakeNavItem = document.querySelector(`.nav-item[onclick*="showPage('${page}'"]`);
+  if (fakeNavItem) {
+    showPage(page, fakeNavItem);
+  } else {
+    // fallback
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('p-' + page);
+    if (target) target.classList.add('active');
+  }
+
+  // Update bottom nav active state
+  document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+  if (bottomNavId) {
+    const btn = document.getElementById(bottomNavId);
+    if (btn) btn.classList.add('active');
+  }
+
+  // Update drawer nav items
+  document.querySelectorAll('.mobile-drawer .nav-item').forEach(i => i.classList.remove('active'));
+  if (el && el.classList && el.classList.contains('nav-item')) {
+    el.classList.add('active');
+  }
+
+  // Update mobile topbar subtitle
+  const pageTitleEl = document.querySelector('#p-' + page + ' .page-title');
+  const topbarSub = document.querySelector('.mobile-topbar-sub');
+  if (topbarSub && pageTitleEl) {
+    topbarSub.textContent = pageTitleEl.textContent;
+  }
+
+  closeMobileDrawer();
+
+  // Scroll to top
+  window.scrollTo(0, 0);
+}
+
+// Sync bottom nav when desktop sidebar is used
+const origShowPage = showPage;
+// Already defined globally; patch active state
+document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+  const origOnclick = item.getAttribute('onclick');
+  if (!origOnclick) return;
+  const match = origOnclick.match(/showPage\('(\w+)'/);
+  if (!match) return;
+  const pageId = match[1];
+  item.addEventListener('click', function() {
+    // sync bottom nav
+    document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+    const mbn = document.getElementById('mobnav-' + pageId);
+    if (mbn) mbn.classList.add('active');
+  });
+});
+
+// On mobile: make tables show as cards
+function renderMobileCards() {
+  if (window.innerWidth > 768) return;
+
+  // Checklists
+  const checklistTbl = document.getElementById('checklistTable');
+  if (checklistTbl) {
+    const parentCard = checklistTbl.closest('.table-card');
+    if (parentCard && !parentCard.querySelector('.mob-card-list')) {
+      const list = document.createElement('div');
+      list.className = 'mob-card-list';
+      list.id = 'mobChecklistCards';
+      parentCard.appendChild(list);
+    }
+  }
+}
+
+// Run on load and resize
+window.addEventListener('load', renderMobileCards);
+window.addEventListener('resize', renderMobileCards);
+
+// Patch renderTable to also populate mobile cards
+const _origRenderTable = typeof renderTable === 'function' ? renderTable : null;
+if (_origRenderTable) {
+  window.renderTable = function() {
+    _origRenderTable();
+    if (window.innerWidth <= 768) syncMobileChecklistCards();
+  };
+}
+
+function syncMobileChecklistCards() {
+  const tbl = document.getElementById('checklistTable');
+  if (!tbl) return;
+  const rows = tbl.querySelectorAll('tr');
+  const list = document.getElementById('mobChecklistCards');
+  if (!list) return;
+  list.innerHTML = '';
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 8) return;
+    const id    = cells[1] ? cells[1].textContent.trim() : '';
+    const mot   = cells[2] ? cells[2].textContent.trim() : '';
+    const vei   = cells[3] ? cells[3].textContent.trim() : '';
+    const data  = cells[4] ? cells[4].textContent.trim() : '';
+    const tipo  = cells[5] ? cells[5].textContent.trim() : '';
+    const pts   = cells[6] ? cells[6].textContent.trim() : '';
+    const statusCell = cells[7] ? cells[7].innerHTML : '';
+    const acoes = cells[8] ? cells[8].innerHTML : '';
+
+    const card = document.createElement('div');
+    card.className = 'mob-card';
+    card.innerHTML = `
+      <div class="mob-card-header">
+        <div>
+          <div class="mob-card-id">${id}</div>
+          <div class="mob-card-name">${mot}</div>
+        </div>
+        <div>${statusCell}</div>
+      </div>
+      <div class="mob-card-row">
+        <span class="mob-card-meta"><i class="ti ti-car" style="font-size:11px"></i> ${vei}</span>
+        <span class="mob-card-meta"><i class="ti ti-calendar" style="font-size:11px"></i> ${data}</span>
+        <span class="mob-card-meta">${tipo}</span>
+        <span class="mob-card-meta">⭐ ${pts}</span>
+      </div>
+      <div class="mob-card-actions">${acoes}</div>
+    `;
+    list.appendChild(card);
+  });
+}
 </script>
 </body>
 </html>
