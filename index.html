@@ -2388,7 +2388,7 @@
 </main>
 
 <!-- MODAL NOVO CHECKLIST -->
-<div class="modal-bg" id="modalBg">
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-head">
       <div>
@@ -2416,7 +2416,28 @@
         <option value="">Selecione um veículo...</option>
       </select>
     </div>
-    
+
+    <div class="form-group">
+      <label class="form-label"><i class="ti ti-key" style="margin-right:4px;color:var(--navy2)"></i>Tipo de Vistoria</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 16px;
+          border-radius:var(--radius-sm);border:1.5px solid var(--border);background:#fff;
+          font-size:13px;font-weight:500;flex:1;transition:all .15s" id="label-tipo-retirada">
+          <input type="radio" name="m-tipo-vistoria" value="retirada" id="m-tipo-retirada"
+            style="accent-color:var(--navy2);width:15px;height:15px"
+            onchange="updateTipoVistoriaStyle()">
+          🔑 Retirada
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 16px;
+          border-radius:var(--radius-sm);border:1.5px solid var(--border);background:#fff;
+          font-size:13px;font-weight:500;flex:1;transition:all .15s" id="label-tipo-devolucao">
+          <input type="radio" name="m-tipo-vistoria" value="devolucao" id="m-tipo-devolucao"
+            style="accent-color:var(--navy2);width:15px;height:15px"
+            onchange="updateTipoVistoriaStyle()">
+          🏠 Devolução
+        </label>
+      </div>
+    </div>
 
     <div class="form-group">
       <label class="form-label">Itens de Vistoria</label>
@@ -2744,82 +2765,20 @@
     </button>
 
     <!-- Recent checklists -->
-    <div id="appRecentLabel" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);
-      text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Vistorias Recentes</div>
-    <div id="appRecentList" style="display:flex;flex-direction:column;gap:8px"></div>
-  </div>
-
-  <!-- APP TIPO DE VISTORIA (Retirada / Devolução) -->
-  <div id="appTipoScreen" style="display:none;max-width:480px;margin:0 auto;padding:20px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
-      <button onclick="appBackToHome()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
-        color:rgba(255,255,255,.7);border-radius:8px;padding:8px 12px;cursor:pointer;font-family:inherit">
-        <i class="ti ti-arrow-left"></i>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div id="appRecentLabel" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);
+        text-transform:uppercase;letter-spacing:.6px">Vistorias Recentes</div>
+      <button onclick="appRefreshHome()" id="appRefreshBtn"
+        style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.07);
+          border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);border-radius:7px;
+          padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;
+          transition:all .15s"
+        onmouseover="this.style.background='rgba(79,142,247,.2)';this.style.color='#fff'"
+        onmouseout="this.style.background='rgba(255,255,255,.07)';this.style.color='rgba(255,255,255,.5)'">
+        <i class="ti ti-refresh" style="font-size:13px"></i> Atualizar
       </button>
-      <div>
-        <div style="font-size:16px;font-weight:700;color:#fff">Tipo de Vistoria</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.45)">Selecione o tipo antes de prosseguir</div>
-      </div>
     </div>
-
-    <!-- Alerta de devolução pendente -->
-    <div id="appAlertDevolucao" style="display:none;background:rgba(220,38,38,.15);border:1.5px solid rgba(220,38,38,.5);
-      border-radius:12px;padding:14px 16px;margin-bottom:18px">
-      <div style="display:flex;align-items:flex-start;gap:10px">
-        <i class="ti ti-alert-triangle" style="font-size:20px;color:#f87171;flex-shrink:0;margin-top:1px"></i>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:#fca5a5">Devolução pendente!</div>
-          <div id="appAlertDevolucaoMsg" style="font-size:12px;color:rgba(255,255,255,.65);margin-top:3px;line-height:1.5"></div>
-          <div style="font-size:11px;color:rgba(220,38,38,.8);margin-top:6px;font-weight:600">
-            ⚠️ O gestor será notificado desta irregularidade.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <!-- Retirada -->
-      <div onclick="appSelecionarTipo('retirada')"
-        style="background:rgba(79,142,247,.12);border:2px solid rgba(79,142,247,.35);border-radius:16px;
-          padding:22px 20px;cursor:pointer;transition:all .18s;user-select:none"
-        onmouseover="this.style.background='rgba(79,142,247,.22)';this.style.borderColor='rgba(79,142,247,.7)'"
-        onmouseout="this.style.background='rgba(79,142,247,.12)';this.style.borderColor='rgba(79,142,247,.35)'">
-        <div style="display:flex;align-items:center;gap:16px">
-          <div style="width:52px;height:52px;border-radius:14px;background:rgba(79,142,247,.25);
-            display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <i class="ti ti-key" style="font-size:26px;color:#60a5fa"></i>
-          </div>
-          <div style="flex:1">
-            <div style="font-size:17px;font-weight:800;color:#fff">Retirada</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:3px">
-              Vistoria ao retirar o veículo
-            </div>
-          </div>
-          <i class="ti ti-chevron-right" style="color:rgba(79,142,247,.6);font-size:20px"></i>
-        </div>
-      </div>
-
-      <!-- Devolução -->
-      <div onclick="appSelecionarTipo('devolucao')"
-        style="background:rgba(22,163,74,.12);border:2px solid rgba(22,163,74,.35);border-radius:16px;
-          padding:22px 20px;cursor:pointer;transition:all .18s;user-select:none"
-        onmouseover="this.style.background='rgba(22,163,74,.22)';this.style.borderColor='rgba(22,163,74,.7)'"
-        onmouseout="this.style.background='rgba(22,163,74,.12)';this.style.borderColor='rgba(22,163,74,.35)'">
-        <div style="display:flex;align-items:center;gap:16px">
-          <div style="width:52px;height:52px;border-radius:14px;background:rgba(22,163,74,.25);
-            display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <i class="ti ti-car-garage" style="font-size:26px;color:#4ade80"></i>
-          </div>
-          <div style="flex:1">
-            <div style="font-size:17px;font-weight:800;color:#fff">Devolução</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:3px">
-              Vistoria ao devolver o veículo
-            </div>
-          </div>
-          <i class="ti ti-chevron-right" style="color:rgba(22,163,74,.6);font-size:20px"></i>
-        </div>
-      </div>
-    </div>
+    <div id="appRecentList" style="display:flex;flex-direction:column;gap:8px"></div>
   </div>
 
   <!-- APP SELEÇÃO DE MODELO -->
@@ -2898,6 +2857,33 @@
 
       <!-- Campo oculto com o valor real -->
       <input type="hidden" id="appVeiculo">
+    </div>
+
+    <!-- Tipo de Vistoria (inline no form) -->
+    <div style="background:rgba(255,255,255,.07);border-radius:12px;padding:16px;margin-bottom:14px;
+      border:1px solid rgba(255,255,255,.1)">
+      <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);
+        text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:10px">
+        <i class="ti ti-key" style="margin-right:5px;color:rgba(255,255,255,.4)"></i>Tipo de Vistoria
+      </label>
+      <div style="display:flex;gap:10px">
+        <!-- Retirada -->
+        <button id="appTipoBtnRet" onclick="appSetTipoForm('retirada')"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+            padding:13px 10px;border-radius:10px;border:2px solid rgba(79,142,247,.35);
+            background:rgba(79,142,247,.1);color:rgba(255,255,255,.6);
+            font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s">
+          <i class="ti ti-key" style="font-size:16px"></i> Retirada
+        </button>
+        <!-- Devolução -->
+        <button id="appTipoBtnDev" onclick="appSetTipoForm('devolucao')"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+            padding:13px 10px;border-radius:10px;border:2px solid rgba(22,163,74,.35);
+            background:rgba(22,163,74,.1);color:rgba(255,255,255,.6);
+            font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s">
+          <i class="ti ti-car-garage" style="font-size:16px"></i> Devolução
+        </button>
+      </div>
     </div>
 
     <!-- Alerta devolução pendente no form -->
@@ -3489,6 +3475,7 @@ async function dbLoadChecklists() {
       obs: r.observacoes || '', sig: r.assinatura || null,
       loc: loc,
       tipoVistoria: r.tipo_vistoria || null,
+      setor: r.setor || 'motorista',
       gestorDecisao: r.gestor_decisao || null,
       gestorObs: r.gestor_obs || '', gestorData: r.gestor_data || '',
       modeloNome: r.modelo_nome || 'Padrão',
@@ -3676,7 +3663,8 @@ async function dbSaveChecklist(c) {
     itens_result:        itensParaSalvar ? JSON.stringify(itensParaSalvar) : null,
     localizacao:         c.loc ? JSON.stringify(c.loc) : null,
     comentarios_grupos:  c.comentariosGrupos ? JSON.stringify(c.comentariosGrupos) : null,
-    tipo_vistoria:       c.tipoVistoria || null
+    tipo_vistoria:       c.tipoVistoria || null,
+    setor:               c.setor || 'motorista'
   };
   const data = await dbRun('salvar checklist', () =>
     sb.from('checklists').insert(payload).select().single()
@@ -4634,7 +4622,7 @@ function closeAppMotorista() {
   logoutToLogin();
 }
 
-function appLogin() {
+async function appLogin() {
   const cpf = document.getElementById('appCpfInput').value.trim();
   const driver = drivers.find(d => d.cpf === cpf && d.ativo !== false);
   if (!driver) {
@@ -4644,7 +4632,24 @@ function appLogin() {
   appCurrentDriver = driver;
   document.getElementById('appLoginError').style.display = 'none';
   document.getElementById('appLogin').style.display = 'none';
+
+  // Atualiza dados do banco antes de exibir a home, para que vistorias já registradas apareçam
+  try {
+    if (typeof dbLoadChecklists === 'function') await dbLoadChecklists();
+  } catch(e) {}
+
   showAppHome();
+}
+
+async function appRefreshHome() {
+  const btn = document.getElementById('appRefreshBtn');
+  if (btn) { btn.style.opacity = '.5'; btn.style.pointerEvents = 'none'; }
+  try {
+    if (typeof dbLoadChecklists === 'function') await dbLoadChecklists();
+    if (typeof dbLoadMotoristas === 'function') await dbLoadMotoristas();
+  } catch(e) {}
+  showAppHome();
+  if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = ''; }
 }
 
 function appLogout() {
@@ -4674,7 +4679,8 @@ function showAppHome() {
 
   // Stats — filtra pelo setor correto
   const setor = appCurrentManutencao ? 'manutencao' : 'motorista';
-  const meusCL = checklists.filter(c => c.m === nome && c.setor === setor);
+  // Inclui checklists sem setor (criados pelo gestor) e os do setor correto
+  const meusCL = checklists.filter(c => c.m === nome && (!c.setor || c.setor === setor));
   const aprov = meusCL.filter(c => c.status === 'Aprovado').length;
   const avg   = meusCL.length ? Math.round(meusCL.reduce((a,c)=>a+c.score,0)/meusCL.length) : 0;
 
@@ -4694,19 +4700,46 @@ function showAppHome() {
   const recenteLabelEl = document.getElementById('appRecentLabel');
   if (recenteLabelEl) recenteLabelEl.textContent = labelRecente;
 
-  const recent = [...meusCL].reverse().slice(0, 5);
+  const recent = [...meusCL].reverse().slice(0, 8);
   document.getElementById('appRecentList').innerHTML = recent.length ? recent.map(c => {
     const col = c.status==='Aprovado'?'#16a34a':c.status==='Reprovado'?'#dc2626':'#d97706';
+    const tipoBg    = c.tipoVistoria === 'retirada' ? 'rgba(79,142,247,.18)'  : c.tipoVistoria === 'devolucao' ? 'rgba(22,163,74,.18)'  : 'rgba(255,255,255,.08)';
+    const tipoColor = c.tipoVistoria === 'retirada' ? '#60a5fa'               : c.tipoVistoria === 'devolucao' ? '#4ade80'               : 'rgba(255,255,255,.35)';
+    const tipoIcon  = c.tipoVistoria === 'retirada' ? '🔑'                    : c.tipoVistoria === 'devolucao' ? '🏠'                    : '📋';
+    const tipoLabel = c.tipoVistoria === 'retirada' ? 'Retirada'              : c.tipoVistoria === 'devolucao' ? 'Devolução'             : 'Vistoria';
+    const modelo    = c.modeloNome || 'Padrão';
     return `
-    <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:12px 14px;
-      border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px">
-      <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:#fff">${c.id} · ${c.v}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px">${c.d} · ${c.score}%</div>
+    <div style="background:rgba(255,255,255,.06);border-radius:12px;
+      border:1px solid rgba(255,255,255,.09);overflow:hidden">
+      <!-- Cabeçalho: tipo + status -->
+      <div style="display:flex;align-items:center;justify-content:space-between;
+        padding:9px 14px;background:${tipoBg};border-bottom:1px solid rgba(255,255,255,.06)">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:13px">${tipoIcon}</span>
+          <span style="font-size:11px;font-weight:700;color:${tipoColor};letter-spacing:.3px">
+            ${tipoLabel.toUpperCase()}
+          </span>
+          <span style="font-size:10px;color:rgba(255,255,255,.3)">·</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600">${modelo}</span>
+        </div>
+        <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:8px;
+          background:${col}22;color:${col}">${c.status}</span>
       </div>
-      <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;
-        background:${col}22;color:${col}">${c.status}</span>
+      <!-- Corpo: veículo + data + score -->
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px">
+        <div style="width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.07);
+          display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ti-car" style="font-size:17px;color:rgba(255,255,255,.5)"></i>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:.3px">${c.v}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px">${c.d}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:15px;font-weight:800;color:${col}">${c.score}%</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px">${c.id}</div>
+        </div>
+      </div>
     </div>`;
   }).join('') : `<div style="text-align:center;padding:24px;color:rgba(255,255,255,.3);font-size:13px">
     Nenhum checklist realizado ainda.</div>`;
@@ -4838,26 +4871,16 @@ function appLimparVeiculo() {
 let appTipoVistoria = null; // 'retirada' | 'devolucao'
 
 function appIrParaTipoVistoria() {
-  // Para manutenção, pula a tela de tipo
+  // Para manutenção, pula direto para modelos
   if (appCurrentManutencao) { appEscolherModelo(); return; }
 
+  // Tipo agora é selecionado dentro do form — vai direto para modelos
   appTipoVistoria = null;
-  document.getElementById('appHome').style.display = 'none';
-  document.getElementById('appTipoScreen').style.display = 'block';
-  document.getElementById('appAlertDevolucao').style.display = 'none';
+  appEscolherModelo();
 }
 
 function appSelecionarTipo(tipo) {
   appTipoVistoria = tipo;
-
-  if (tipo === 'retirada') {
-    // Verificar se o veículo selecionado tem devolução pendente
-    // (será verificado após selecionar o veículo — avança direto para modelos)
-    appEscolherModelo();
-    return;
-  }
-
-  // Devolução — avança para modelos normalmente
   appEscolherModelo();
 }
 
@@ -4914,7 +4937,6 @@ function _registrarAlertaGestor(placa, motorista, data) {
 
 function appEscolherModelo() {
   document.getElementById('appHome').style.display = 'none';
-  document.getElementById('appTipoScreen').style.display = 'none';
   document.getElementById('appModeloScreen').style.display = 'block';
 
   // Filtra modelos pelo setor do usuário logado
@@ -4972,13 +4994,41 @@ function appSelecionarModelo(modeloId) {
 
 function appVoltarParaModelos() {
   document.getElementById('appChecklistForm').style.display = 'none';
-  // Se é motorista, volta para tela de tipo; se manutenção, vai direto para modelos
-  if (!appCurrentManutencao) {
-    document.getElementById('appModeloScreen').style.display = 'none';
-    document.getElementById('appTipoScreen').style.display = 'block';
-    document.getElementById('appAlertDevolucao').style.display = 'none';
-  } else {
-    appEscolherModelo();
+  appEscolherModelo();
+}
+
+// ── Atualiza visual dos botões Retirada / Devolução dentro do form ──
+function appSetTipoForm(tipo) {
+  appTipoVistoria = tipo;
+  const btnRet = document.getElementById('appTipoBtnRet');
+  const btnDev = document.getElementById('appTipoBtnDev');
+  if (!btnRet || !btnDev) return;
+
+  // Reset ambos
+  btnRet.style.borderColor = 'rgba(79,142,247,.35)';
+  btnRet.style.background  = 'rgba(79,142,247,.1)';
+  btnRet.style.color       = 'rgba(255,255,255,.6)';
+  btnDev.style.borderColor = 'rgba(22,163,74,.35)';
+  btnDev.style.background  = 'rgba(22,163,74,.1)';
+  btnDev.style.color       = 'rgba(255,255,255,.6)';
+
+  if (tipo === 'retirada') {
+    btnRet.style.borderColor = '#60a5fa';
+    btnRet.style.background  = 'rgba(79,142,247,.3)';
+    btnRet.style.color       = '#fff';
+  } else if (tipo === 'devolucao') {
+    btnDev.style.borderColor = '#4ade80';
+    btnDev.style.background  = 'rgba(22,163,74,.3)';
+    btnDev.style.color       = '#fff';
+  }
+
+  // Atualiza subtítulo
+  const modeloLabel = appModeloSelecionado ? 'Modelo: ' + appModeloSelecionado.nome : 'Preencha todos os itens';
+  const sub = document.getElementById('appChecklistSubtitle');
+  if (sub) {
+    if (tipo === 'retirada') sub.textContent = '🔑 Retirada · ' + modeloLabel;
+    else if (tipo === 'devolucao') sub.textContent = '🏠 Devolução · ' + modeloLabel;
+    else sub.textContent = modeloLabel;
   }
 }
 
@@ -5001,11 +5051,8 @@ function appStartChecklist() {
   const limpar = document.getElementById('appVeiculoBuscaLimpar');
   if (limpar) limpar.style.display = 'none';
 
-  // Mostrar tipo de vistoria no subtítulo
-  const tipoLabel = appTipoVistoria === 'retirada' ? '🔑 Retirada' : appTipoVistoria === 'devolucao' ? '🏠 Devolução' : '';
-  const modeloLabel = appModeloSelecionado ? `Modelo: ${appModeloSelecionado.nome}` : 'Preencha todos os itens';
-  document.getElementById('appChecklistSubtitle').textContent =
-    tipoLabel ? `${tipoLabel} · ${modeloLabel}` : modeloLabel;
+  // Sincronizar visual dos botões de tipo com o valor já definido (vindo da tela anterior)
+  appSetTipoForm(appTipoVistoria || null);
 
   // Ocultar alerta
   const alertForm = document.getElementById('appAlertDevolucaoForm');
@@ -5018,7 +5065,6 @@ function appStartChecklist() {
 function appBackToHome() {
   document.getElementById('appChecklistForm').style.display = 'none';
   document.getElementById('appModeloScreen').style.display = 'none';
-  document.getElementById('appTipoScreen').style.display = 'none';
   appModeloSelecionado = null;
   appTipoVistoria = null;
   showAppHome();
@@ -6298,49 +6344,136 @@ function confirmDeleteModelo() {
 }
 
 // ── MODAL ──
+function updateTipoVistoriaStyle() {
+  const labels = {
+    retirada:  document.getElementById('label-tipo-retirada'),
+    devolucao: document.getElementById('label-tipo-devolucao')
+  };
+  const selected = document.querySelector('input[name="m-tipo-vistoria"]:checked');
+  const val = selected ? selected.value : null;
+
+  Object.entries(labels).forEach(([key, lbl]) => {
+    if (!lbl) return;
+    if (key === val) {
+      lbl.style.borderColor = 'var(--navy2)';
+      lbl.style.background  = 'rgba(20,32,64,.07)';
+      lbl.style.fontWeight  = '700';
+    } else {
+      lbl.style.borderColor = 'var(--border)';
+      lbl.style.background  = '#fff';
+      lbl.style.fontWeight  = '500';
+    }
+  });
+}
+
 function openModal() {
+  // Limpa estado anterior para evitar que status N/A de sessões antigas persista
+  Object.keys(modalItemStatus).forEach(k => delete modalItemStatus[k]);
+  Object.keys(itemPhotos).forEach(k => delete itemPhotos[k]);
   populateVeiculoSelect();
   document.getElementById('modalBg').classList.add('open');
   renderChecklistItems();
   setTimeout(initSignature, 50);
 }
 
+// Status dos itens no modal do gestor: { i: 'conforme'|'naoconforme'|'na' }
+const modalItemStatus = {};
+
+function setModalItemStatus(i, status) {
+  modalItemStatus[i] = status;
+  const btnC  = document.getElementById('mcbtn-conf-' + i);
+  const btnNC = document.getElementById('mcbtn-nconf-' + i);
+  const btnNA = document.getElementById('mcbtn-na-' + i);
+  const zone  = document.getElementById('mcpzone-' + i);
+  // Reset para estilo inativo (tema claro)
+  if (btnC)  { btnC.style.background  = '#fff'; btnC.style.color  = '#16a34a'; btnC.style.borderColor  = '#bbf7d0'; }
+  if (btnNC) { btnNC.style.background = '#fff'; btnNC.style.color = '#dc2626'; btnNC.style.borderColor = '#fecaca'; }
+  if (btnNA) { btnNA.style.background = '#fff'; btnNA.style.color = '#94a3b8'; btnNA.style.borderColor = '#e2e8f0'; }
+  // Ativa o selecionado
+  if (status === 'conforme')    { if (btnC)  { btnC.style.background  = '#16a34a'; btnC.style.color  = '#fff'; btnC.style.borderColor  = '#16a34a'; } }
+  else if (status === 'naoconforme') { if (btnNC) { btnNC.style.background = '#dc2626'; btnNC.style.color = '#fff'; btnNC.style.borderColor = '#dc2626'; } }
+  else if (status === 'na')     { if (btnNA) { btnNA.style.background = '#64748b'; btnNA.style.color = '#fff'; btnNA.style.borderColor = '#64748b'; } }
+  // N/A oculta a zona de foto
+  if (zone) zone.style.display = (status === 'na') ? 'none' : 'block';
+}
+
+function handleModalPhoto(i, input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const compressed = await compressImage(e.target.result, 800, 600, 0.55);
+    itemPhotos[i] = { dataUrl: compressed, name: file.name };
+    document.getElementById('mcpupload-' + i).style.display = 'none';
+    document.getElementById('mcpimg-'    + i).src = compressed;
+    document.getElementById('mcpname-'   + i).textContent = file.name;
+    document.getElementById('mcppreview-' + i).style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeModalPhoto(i) {
+  delete itemPhotos[i];
+  document.getElementById('mcpupload-'  + i).style.display = '';
+  document.getElementById('mcppreview-' + i).style.display = 'none';
+  document.getElementById('mcpimg-'    + i).src = '';
+  const inp = document.querySelector('#mcrow-' + i + ' input[type=file]');
+  if (inp) inp.value = '';
+}
+
 function renderChecklistItems() {
   const container = document.getElementById('checklistItemsContainer');
-  container.innerHTML = checklistItems.map((item, i) => {
-    if (item.requirePhoto) {
-      return `
-        <div class="check-row check-row-photo" id="crow-${i}">
-          <div class="check-row-top" onclick="toggleCheckPhoto(${i})">
-            <input type="checkbox" id="ci${i+1}" onclick="event.stopPropagation()">
-            <label for="ci${i+1}" style="flex:1;cursor:pointer">${item.name}</label>
-            <span class="photo-required-badge"><i class="ti ti-camera" style="font-size:11px"></i> Foto obrigatória</span>
-          </div>
-          <div class="photo-upload-zone" id="pzone-${i}">
-            <div class="photo-upload-inner" id="pupload-${i}">
-              <input type="file" accept="image/*" capture="environment"
-                onchange="handlePhotoUpload(${i}, this)" onclick="event.stopPropagation()">
-              <i class="ti ti-camera-plus photo-upload-icon"></i>
-              <div class="photo-upload-text"><strong>Tirar foto ou escolher arquivo</strong><br>JPG, PNG até 5MB</div>
-            </div>
-            <div class="photo-preview" id="ppreview-${i}">
-              <img id="pimg-${i}" src="" alt="Foto do item">
-              <div class="photo-preview-bar">
-                <span class="photo-preview-name" id="pname-${i}"></span>
-                <button class="photo-remove-btn" onclick="removePhoto(${i});event.stopPropagation()">
-                  <i class="ti ti-trash"></i> Remover
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>`;
-    } else {
-      return `
-        <div class="check-row" onclick="toggleCheck(this)">
-          <input type="checkbox" id="ci${i+1}"><label for="ci${i+1}">${item.name}</label>
-        </div>`;
-    }
+  container.innerHTML = checklistItems.map(function(item, i) {
+    var numFotos = item.requirePhoto ? 1 : 0;
+    var fotoSlot = numFotos > 0 ? (
+      '<div id="mcpzone-' + i + '" style="display:none;margin-top:10px">' +
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:5px">' +
+          '<i class="ti ti-camera" style="color:var(--accent)"></i> Foto obrigatória' +
+        '</div>' +
+        '<div id="mcpupload-' + i + '" style="border:1.5px dashed var(--border);border-radius:8px;position:relative;overflow:hidden;cursor:pointer;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:border-color .15s;background:#fafbfc">' +
+          '<input type="file" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleModalPhoto(' + i + ',this)">' +
+          '<i class="ti ti-camera-plus" style="font-size:22px;color:var(--accent)"></i>' +
+          '<span style="font-size:11px;color:var(--muted)">Tirar foto ou escolher arquivo</span>' +
+        '</div>' +
+        '<div id="mcppreview-' + i + '" style="display:none;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-top:4px">' +
+          '<img id="mcpimg-' + i + '" style="display:block;width:100%;max-height:140px;object-fit:cover">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#f8fafc;border-top:1px solid var(--border)">' +
+            '<span id="mcpname-' + i + '" style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%"></span>' +
+            '<button onclick="removeModalPhoto(' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:3px"><i class="ti ti-trash" style="font-size:13px"></i> Remover</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    ) : '';
+
+    return (
+      '<div style="padding:12px 14px;border-bottom:1px solid var(--border)" id="mcrow-' + i + '">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">' +
+          '<span style="font-size:13px;font-weight:600;color:var(--text);flex:1">' +
+            item.name +
+            (item.requirePhoto ? ' <span style="font-size:9px;font-weight:700;color:var(--red);background:var(--red-bg);padding:1px 6px;border-radius:5px;margin-left:5px">CR&Iacute;TICO</span>' : '') +
+          '</span>' +
+          '<span style="font-size:11px;color:var(--muted);font-weight:600">+' + (item.pts||10) + 'pts</span>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px">' +
+          '<button id="mcbtn-conf-' + i + '" onclick="setModalItemStatus(' + i + ',\'conforme\')" style="flex:1;padding:8px 6px;border-radius:var(--radius-sm);border:1.5px solid #bbf7d0;background:#fff;color:#16a34a;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px">' +
+            '<i class="ti ti-circle-check" style="font-size:14px"></i> Conforme' +
+          '</button>' +
+          '<button id="mcbtn-nconf-' + i + '" onclick="setModalItemStatus(' + i + ',\'naoconforme\')" style="flex:1;padding:8px 6px;border-radius:var(--radius-sm);border:1.5px solid #fecaca;background:#fff;color:#dc2626;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px">' +
+            '<i class="ti ti-circle-x" style="font-size:14px"></i> N&atilde;o Conforme' +
+          '</button>' +
+          '<button id="mcbtn-na-' + i + '" onclick="setModalItemStatus(' + i + ',\'na\')" style="padding:8px 10px;border-radius:var(--radius-sm);border:1.5px solid #e2e8f0;background:#fff;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap" title="N&atilde;o se aplica">' +
+            '<i class="ti ti-minus" style="font-size:13px"></i> N/A' +
+          '</button>' +
+        '</div>' +
+        fotoSlot +
+      '</div>'
+    );
   }).join('');
+  // Re-aplica visualmente qualquer status já existente no modalItemStatus
+  setTimeout(function() {
+    Object.keys(modalItemStatus).forEach(function(k) {
+      setModalItemStatus(parseInt(k), modalItemStatus[k]);
+    });
+  }, 0);
 }
 
 function toggleCheckPhoto(i) {
@@ -6400,6 +6533,11 @@ function closeModal() {
   document.getElementById('m-veiculo').value = '';
   document.getElementById('m-obs').value = '';
   document.querySelectorAll('.checklist-items input[type=checkbox]').forEach(cb => cb.checked = false);
+  // Reset tipo de vistoria
+  document.querySelectorAll('input[name="m-tipo-vistoria"]').forEach(r => r.checked = false);
+  updateTipoVistoriaStyle();
+  // Clear item status
+  Object.keys(modalItemStatus).forEach(k => delete modalItemStatus[k]);
   // Clear all photos
   Object.keys(itemPhotos).forEach(k => delete itemPhotos[k]);
   clearSignature();
@@ -6419,26 +6557,32 @@ function saveChecklist() {
     return;
   }
 
-  // Validate: photo-required items that are checked must have a photo
-  let missingPhoto = null;
-  checklistItems.forEach((item, i) => {
-    if (item.requirePhoto) {
-      const cb = document.getElementById(`ci${i+1}`);
-      if (cb && cb.checked && !itemPhotos[i]) {
-        if (!missingPhoto) missingPhoto = item.name;
-      }
-    }
-  });
-
-  if (missingPhoto) {
-    showToast(`Foto obrigatória: "${missingPhoto}"`, true);
+  // Validar: todos os itens precisam ter status definido
+  const missing = checklistItems.findIndex((_, i) => !modalItemStatus[i]);
+  if (missing >= 0) {
+    showToast('Marque "Conforme", "Não Conforme" ou "N/A" em todos os itens!', true);
+    const el = document.getElementById('mcrow-' + missing);
+    if (el) { el.style.background = '#fef2f2'; setTimeout(() => { el.style.background = ''; }, 1500); }
     return;
   }
 
-  const checks = document.querySelectorAll('.checklist-items input[type=checkbox]:checked');
-  const total  = document.querySelectorAll('.checklist-items input[type=checkbox]').length;
-  const score  = Math.round((checks.length / total) * 100);
-  const status = score >= 70 ? 'Aprovado' : score >= 40 ? 'Pendente' : 'Reprovado';
+  // Validar: itens críticos marcados como conforme/naoconforme precisam de foto
+  let missingPhoto = null;
+  checklistItems.forEach(function(item, i) {
+    if (item.requirePhoto && modalItemStatus[i] !== 'na' && !itemPhotos[i]) {
+      if (!missingPhoto) missingPhoto = item.name;
+    }
+  });
+  if (missingPhoto) {
+    showToast('Foto obrigatória: "' + missingPhoto + '"', true);
+    return;
+  }
+
+  // Pontuação: N/A é excluído do cálculo
+  var totalPts   = checklistItems.reduce(function(s, it, i) { return modalItemStatus[i] === 'na' ? s : s + (it.pts||10); }, 0);
+  var checkedPts = checklistItems.reduce(function(s, it, i) { return s + (modalItemStatus[i] === 'conforme' ? (it.pts||10) : 0); }, 0);
+  var score  = totalPts ? Math.round((checkedPts / totalPts) * 100) : 0;
+  var status = score >= 70 ? 'Aprovado' : score >= 40 ? 'Pendente' : 'Reprovado';
 
   const now = new Date();
   const d   = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -6449,19 +6593,25 @@ function saveChecklist() {
   Object.keys(itemPhotos).forEach(k => { savedPhotos[k] = { ...itemPhotos[k] }; });
 
   // Captura resultado de cada item
-  const itensResult = checklistItems.map((item, i) => {
-    const cb = document.getElementById(`ci${i+1}`);
+  const itensResult = checklistItems.map(function(item, i) {
+    var st = modalItemStatus[i] || 'naoconforme';
     return {
       nome:    item.name,
       pts:     item.pts || 10,
       critico: item.requirePhoto || false,
-      ok:      cb ? cb.checked : false,
+      ok:      st === 'conforme',
+      status:  st,
       foto:    itemPhotos[i] ? itemPhotos[i].dataUrl : null
     };
   });
 
+  const tipoVistoriaEl = document.querySelector('input[name="m-tipo-vistoria"]:checked');
+  const tipoVistoria   = tipoVistoriaEl ? tipoVistoriaEl.value : null;
+
   const newCL = {
     id, m: motorista, v: veiculo, d, score, status,
+    tipoVistoria: tipoVistoria,
+    setor: 'motorista',
     obs: document.getElementById('m-obs').value,
     sig: getSignatureDataURL(),
     fotos: savedPhotos,
@@ -6593,6 +6743,66 @@ function viewChecklist(id) {
         </div>
       </div>` : ''}
     </div>
+
+    <!-- Par Retirada / Devolução -->
+    ${(() => {
+      // Encontra todos os checklists do mesmo veículo (exceto o atual)
+      const mesmoVeiculo = checklists.filter(x => x.v === c.v && x.id !== c.id);
+      // Ordena por data decrescente (mais recente primeiro)
+      mesmoVeiculo.sort((a, b) => {
+        const parseDate = d => { if (!d) return 0; const [dt, hr='00:00'] = d.split(' '); const [dd,mm,yy] = dt.split('/'); const [hh,mi] = hr.split(':'); return new Date(+yy,+mm-1,+dd,+hh||0,+mi||0).getTime(); };
+        return parseDate(b.d) - parseDate(a.d);
+      });
+      const retChk = mesmoVeiculo.find(x => x.tipoVistoria === 'retirada');
+      const devChk = mesmoVeiculo.find(x => x.tipoVistoria === 'devolucao');
+      const thisRet = c.tipoVistoria === 'retirada' ? c : retChk;
+      const thisDev = c.tipoVistoria === 'devolucao' ? c : devChk;
+
+      if (!thisRet && !thisDev) return '';
+
+      const cardStyle = 'flex:1;border-radius:10px;padding:12px 14px;min-width:0';
+      const retCard = `
+        <div style="${cardStyle};background:rgba(79,142,247,.07);border:1.5px solid rgba(79,142,247,.25)">
+          <div style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px">
+            <i class="ti ti-key" style="font-size:12px"></i> Retirada
+          </div>
+          ${thisRet ? `
+            <div style="font-size:13px;font-weight:700;color:var(--text)">${thisRet.m}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${thisRet.d}</div>
+            <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:${thisRet.score>=70?'#f0fdf4':thisRet.score>=40?'#fffbeb':'#fef2f2'};color:${thisRet.score>=70?'#15803d':thisRet.score>=40?'#b45309':'#b91c1c'}">${thisRet.score}%</span>
+              ${thisRet.id !== c.id ? `<button onclick="viewChecklist('${thisRet.id}')" style="font-size:10px;font-weight:700;color:#2563eb;background:none;border:none;cursor:pointer;font-family:inherit;padding:0;text-decoration:underline">Ver ${thisRet.id}</button>` : `<span style="font-size:10px;color:var(--accent);font-weight:600">← Este checklist</span>`}
+            </div>
+          ` : `<div style="font-size:12px;color:var(--muted);font-style:italic">Não registrada</div>`}
+        </div>`;
+
+      const devCard = `
+        <div style="${cardStyle};background:rgba(22,163,74,.07);border:1.5px solid rgba(22,163,74,.25)">
+          <div style="font-size:10px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px">
+            <i class="ti ti-car-garage" style="font-size:12px"></i> Devolução
+          </div>
+          ${thisDev ? `
+            <div style="font-size:13px;font-weight:700;color:var(--text)">${thisDev.m}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${thisDev.d}</div>
+            <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:${thisDev.score>=70?'#f0fdf4':thisDev.score>=40?'#fffbeb':'#fef2f2'};color:${thisDev.score>=70?'#15803d':thisDev.score>=40?'#b45309':'#b91c1c'}">${thisDev.score}%</span>
+              ${thisDev.id !== c.id ? `<button onclick="viewChecklist('${thisDev.id}')" style="font-size:10px;font-weight:700;color:#15803d;background:none;border:none;cursor:pointer;font-family:inherit;padding:0;text-decoration:underline">Ver ${thisDev.id}</button>` : `<span style="font-size:10px;color:#16a34a;font-weight:600">← Este checklist</span>`}
+            </div>
+          ` : `<div style="font-size:12px;color:var(--muted);font-style:italic">Não registrada</div>`}
+        </div>`;
+
+      return `
+        <div style="margin-bottom:20px">
+          <div class="vm-section-title" style="margin-bottom:10px">
+            <i class="ti ti-arrows-exchange" style="margin-right:5px"></i>Par Retirada / Devolução — ${c.v}
+          </div>
+          <div style="display:flex;gap:10px">
+            ${retCard}
+            <div style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:18px;flex-shrink:0">⇄</div>
+            ${devCard}
+          </div>
+        </div>`;
+    })()}
 
     <!-- Checklist Items -->
     <div class="vm-section-title"><i class="ti ti-list-check" style="margin-right:5px"></i>Itens Vistoriados</div>
@@ -6957,6 +7167,34 @@ function exportPDF() {
         </div>
       </div>` : ''}
     </div>
+
+    <!-- Par Retirada / Devolução (PDF) -->
+    ${(() => {
+      const mesmoVeiculo = checklists.filter(x => x.v === c.v && x.id !== c.id);
+      mesmoVeiculo.sort((a, b) => {
+        const pd = d => { if (!d) return 0; const [dt,hr='00:00']=d.split(' '); const [dd,mm,yy]=dt.split('/'); const [hh,mi]=hr.split(':'); return new Date(+yy,+mm-1,+dd,+hh||0,+mi||0).getTime(); };
+        return pd(b.d) - pd(a.d);
+      });
+      const retChk = mesmoVeiculo.find(x => x.tipoVistoria === 'retirada');
+      const devChk = mesmoVeiculo.find(x => x.tipoVistoria === 'devolucao');
+      const thisRet = c.tipoVistoria === 'retirada' ? c : retChk;
+      const thisDev = c.tipoVistoria === 'devolucao' ? c : devChk;
+      if (!thisRet && !thisDev) return '';
+      return `
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">⇄ Par Retirada / Devolução — ${c.v}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:10px 14px">
+              <div style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">🔑 Retirada</div>
+              ${thisRet ? `<div style="font-size:13px;font-weight:700;color:#111827">${thisRet.m}</div><div style="font-size:11px;color:#6b7a99;margin-top:2px">${thisRet.d}</div><div style="font-size:11px;font-weight:700;margin-top:4px;color:${thisRet.score>=70?'#15803d':thisRet.score>=40?'#b45309':'#b91c1c'}">${thisRet.score}% · ${thisRet.id}</div>` : `<div style="font-size:12px;color:#9ca3af;font-style:italic">Não registrada</div>`}
+            </div>
+            <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+              <div style="font-size:10px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">🏠 Devolução</div>
+              ${thisDev ? `<div style="font-size:13px;font-weight:700;color:#111827">${thisDev.m}</div><div style="font-size:11px;color:#6b7a99;margin-top:2px">${thisDev.d}</div><div style="font-size:11px;font-weight:700;margin-top:4px;color:${thisDev.score>=70?'#15803d':thisDev.score>=40?'#b45309':'#b91c1c'}">${thisDev.score}% · ${thisDev.id}</div>` : `<div style="font-size:12px;color:#9ca3af;font-style:italic">Não registrada</div>`}
+            </div>
+          </div>
+        </div>`;
+    })()}
 
     <!-- vm-section-title: Itens -->
     <div style="font-size:11px;font-weight:700;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">📋 Itens Vistoriados</div>
