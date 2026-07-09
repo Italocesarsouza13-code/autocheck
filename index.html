@@ -2436,6 +2436,14 @@
             onchange="updateTipoVistoriaStyle()">
           🏠 Devolução
         </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 16px;
+          border-radius:var(--radius-sm);border:1.5px solid var(--border);background:#fff;
+          font-size:13px;font-weight:500;flex:1;transition:all .15s" id="label-tipo-mensal">
+          <input type="radio" name="m-tipo-vistoria" value="mensal" id="m-tipo-mensal"
+            style="accent-color:#7c3aed;width:15px;height:15px"
+            onchange="updateTipoVistoriaStyle()">
+          📅 Mensal
+        </label>
       </div>
     </div>
 
@@ -2882,6 +2890,14 @@
             background:rgba(22,163,74,.1);color:rgba(255,255,255,.6);
             font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s">
           <i class="ti ti-car-garage" style="font-size:16px"></i> Devolução
+        </button>
+        <!-- Mensal -->
+        <button id="appTipoBtnMen" onclick="appSetTipoForm('mensal')"
+          style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+            padding:13px 10px;border-radius:10px;border:2px solid rgba(124,58,237,.35);
+            background:rgba(124,58,237,.1);color:rgba(255,255,255,.6);
+            font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s">
+          <i class="ti ti-calendar-month" style="font-size:16px"></i> Mensal
         </button>
       </div>
     </div>
@@ -4130,6 +4146,8 @@ function renderTable(filter) {
           ? `<span style="font-size:10px;font-weight:700;background:rgba(79,142,247,.15);color:#60a5fa;padding:2px 8px;border-radius:10px">🔑 Retirada</span>`
           : c.tipoVistoria === 'devolucao'
           ? `<span style="font-size:10px;font-weight:700;background:rgba(22,163,74,.15);color:#4ade80;padding:2px 8px;border-radius:10px">🏠 Devolução</span>`
+          : c.tipoVistoria === 'mensal'
+          ? `<span style="font-size:10px;font-weight:700;background:rgba(124,58,237,.15);color:#a78bfa;padding:2px 8px;border-radius:10px">📅 Mensal</span>`
           : `<span style="font-size:10px;color:var(--muted)">—</span>`}
       </td>
       <td>
@@ -4703,10 +4721,10 @@ function showAppHome() {
   const recent = [...meusCL].reverse().slice(0, 8);
   document.getElementById('appRecentList').innerHTML = recent.length ? recent.map(c => {
     const col = c.status==='Aprovado'?'#16a34a':c.status==='Reprovado'?'#dc2626':'#d97706';
-    const tipoBg    = c.tipoVistoria === 'retirada' ? 'rgba(79,142,247,.18)'  : c.tipoVistoria === 'devolucao' ? 'rgba(22,163,74,.18)'  : 'rgba(255,255,255,.08)';
-    const tipoColor = c.tipoVistoria === 'retirada' ? '#60a5fa'               : c.tipoVistoria === 'devolucao' ? '#4ade80'               : 'rgba(255,255,255,.35)';
-    const tipoIcon  = c.tipoVistoria === 'retirada' ? '🔑'                    : c.tipoVistoria === 'devolucao' ? '🏠'                    : '📋';
-    const tipoLabel = c.tipoVistoria === 'retirada' ? 'Retirada'              : c.tipoVistoria === 'devolucao' ? 'Devolução'             : 'Vistoria';
+    const tipoBg    = c.tipoVistoria === 'retirada' ? 'rgba(79,142,247,.18)'  : c.tipoVistoria === 'devolucao' ? 'rgba(22,163,74,.18)'  : c.tipoVistoria === 'mensal' ? 'rgba(124,58,237,.18)' : 'rgba(255,255,255,.08)';
+    const tipoColor = c.tipoVistoria === 'retirada' ? '#60a5fa'               : c.tipoVistoria === 'devolucao' ? '#4ade80'               : c.tipoVistoria === 'mensal' ? '#a78bfa'               : 'rgba(255,255,255,.35)';
+    const tipoIcon  = c.tipoVistoria === 'retirada' ? '🔑'                    : c.tipoVistoria === 'devolucao' ? '🏠'                    : c.tipoVistoria === 'mensal' ? '📅'                    : '📋';
+    const tipoLabel = c.tipoVistoria === 'retirada' ? 'Retirada'              : c.tipoVistoria === 'devolucao' ? 'Devolução'             : c.tipoVistoria === 'mensal' ? 'Mensal'                : 'Vistoria';
     const modelo    = c.modeloNome || 'Padrão';
     return `
     <div style="background:rgba(255,255,255,.06);border-radius:12px;
@@ -4997,29 +5015,30 @@ function appVoltarParaModelos() {
   appEscolherModelo();
 }
 
-// ── Atualiza visual dos botões Retirada / Devolução dentro do form ──
+// ── Atualiza visual dos botões Retirada / Devolução / Mensal dentro do form ──
 function appSetTipoForm(tipo) {
   appTipoVistoria = tipo;
   const btnRet = document.getElementById('appTipoBtnRet');
   const btnDev = document.getElementById('appTipoBtnDev');
-  if (!btnRet || !btnDev) return;
+  const btnMen = document.getElementById('appTipoBtnMen');
 
-  // Reset ambos
-  btnRet.style.borderColor = 'rgba(79,142,247,.35)';
-  btnRet.style.background  = 'rgba(79,142,247,.1)';
-  btnRet.style.color       = 'rgba(255,255,255,.6)';
-  btnDev.style.borderColor = 'rgba(22,163,74,.35)';
-  btnDev.style.background  = 'rgba(22,163,74,.1)';
-  btnDev.style.color       = 'rgba(255,255,255,.6)';
+  // Reset todos
+  if (btnRet) { btnRet.style.borderColor = 'rgba(79,142,247,.35)';  btnRet.style.background = 'rgba(79,142,247,.1)';  btnRet.style.color = 'rgba(255,255,255,.6)'; }
+  if (btnDev) { btnDev.style.borderColor = 'rgba(22,163,74,.35)';   btnDev.style.background = 'rgba(22,163,74,.1)';   btnDev.style.color = 'rgba(255,255,255,.6)'; }
+  if (btnMen) { btnMen.style.borderColor = 'rgba(124,58,237,.35)';  btnMen.style.background = 'rgba(124,58,237,.1)'; btnMen.style.color = 'rgba(255,255,255,.6)'; }
 
-  if (tipo === 'retirada') {
+  if (tipo === 'retirada' && btnRet) {
     btnRet.style.borderColor = '#60a5fa';
     btnRet.style.background  = 'rgba(79,142,247,.3)';
     btnRet.style.color       = '#fff';
-  } else if (tipo === 'devolucao') {
+  } else if (tipo === 'devolucao' && btnDev) {
     btnDev.style.borderColor = '#4ade80';
     btnDev.style.background  = 'rgba(22,163,74,.3)';
     btnDev.style.color       = '#fff';
+  } else if (tipo === 'mensal' && btnMen) {
+    btnMen.style.borderColor = '#a78bfa';
+    btnMen.style.background  = 'rgba(124,58,237,.3)';
+    btnMen.style.color       = '#fff';
   }
 
   // Atualiza subtítulo
@@ -5028,6 +5047,7 @@ function appSetTipoForm(tipo) {
   if (sub) {
     if (tipo === 'retirada') sub.textContent = '🔑 Retirada · ' + modeloLabel;
     else if (tipo === 'devolucao') sub.textContent = '🏠 Devolução · ' + modeloLabel;
+    else if (tipo === 'mensal') sub.textContent = '📅 Mensal · ' + modeloLabel;
     else sub.textContent = modeloLabel;
   }
 }
@@ -6347,7 +6367,8 @@ function confirmDeleteModelo() {
 function updateTipoVistoriaStyle() {
   const labels = {
     retirada:  document.getElementById('label-tipo-retirada'),
-    devolucao: document.getElementById('label-tipo-devolucao')
+    devolucao: document.getElementById('label-tipo-devolucao'),
+    mensal:    document.getElementById('label-tipo-mensal')
   };
   const selected = document.querySelector('input[name="m-tipo-vistoria"]:checked');
   const val = selected ? selected.value : null;
@@ -6355,8 +6376,8 @@ function updateTipoVistoriaStyle() {
   Object.entries(labels).forEach(([key, lbl]) => {
     if (!lbl) return;
     if (key === val) {
-      lbl.style.borderColor = 'var(--navy2)';
-      lbl.style.background  = 'rgba(20,32,64,.07)';
+      lbl.style.borderColor = key === 'mensal' ? '#7c3aed' : 'var(--navy2)';
+      lbl.style.background  = key === 'mensal' ? 'rgba(124,58,237,.07)' : 'rgba(20,32,64,.07)';
       lbl.style.fontWeight  = '700';
     } else {
       lbl.style.borderColor = 'var(--border)';
@@ -6739,6 +6760,8 @@ function viewChecklist(id) {
         <div class="vm-meta-val">
           ${c.tipoVistoria === 'retirada'
             ? `<span style="background:rgba(79,142,247,.15);color:#60a5fa;padding:3px 10px;border-radius:10px;font-weight:700">🔑 Retirada</span>`
+            : c.tipoVistoria === 'mensal'
+            ? `<span style="background:rgba(124,58,237,.15);color:#a78bfa;padding:3px 10px;border-radius:10px;font-weight:700">📅 Mensal</span>`
             : `<span style="background:rgba(22,163,74,.15);color:#4ade80;padding:3px 10px;border-radius:10px;font-weight:700">🏠 Devolução</span>`}
         </div>
       </div>` : ''}
@@ -7162,8 +7185,8 @@ function exportPDF() {
       ${c.tipoVistoria ? `
       <div style="background:#f8fafc;border-radius:8px;padding:10px 14px">
         <div style="font-size:10px;color:#6b7a99;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Tipo de Vistoria</div>
-        <div style="font-size:13px;font-weight:700;color:${c.tipoVistoria === 'retirada' ? '#2563eb' : '#16a34a'};margin-top:3px">
-          ${c.tipoVistoria === 'retirada' ? '🔑 Retirada' : '🏠 Devolução'}
+        <div style="font-size:13px;font-weight:700;color:${c.tipoVistoria === 'retirada' ? '#2563eb' : c.tipoVistoria === 'mensal' ? '#7c3aed' : '#16a34a'};margin-top:3px">
+          ${c.tipoVistoria === 'retirada' ? '🔑 Retirada' : c.tipoVistoria === 'mensal' ? '📅 Mensal' : '🏠 Devolução'}
         </div>
       </div>` : ''}
     </div>
