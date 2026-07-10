@@ -4507,6 +4507,11 @@ function renderAlertasDevolucao() {
 
   placas.forEach(placa => {
     if (window._alertasDismissedPlacas.has(placa)) return;
+    // Apenas veículos do tipo Pickup
+    const veiculo = (veiculos || []).find(v => v.placa === placa);
+    const tipoVei = (veiculo?.tipo || '').trim().toLowerCase();
+    if (tipoVei !== 'pickup') return;
+
     const cls = motCls.filter(c => c.v === placa).sort((a, b) => b.id.localeCompare(a.id));
     if (!cls.length) return;
     const ultimo = cls[0];
