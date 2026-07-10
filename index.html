@@ -1816,6 +1816,46 @@
     .main { padding: 14px 10px; }
   }
 
+  /* ── FILTER ROW ── */
+  .cl-filter-row {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .cl-filter-row input,
+  .cl-filter-row select {
+    padding: 7px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 12px; font-family: inherit;
+    color: var(--text); background: #fff;
+    outline: none; transition: border-color .15s;
+  }
+  .cl-filter-row input:focus,
+  .cl-filter-row select:focus { border-color: var(--accent); }
+  .cl-filter-row input[type=text] { flex: 1; min-width: 160px; }
+  .cl-filter-row select { min-width: 130px; }
+  .cl-filter-clear {
+    background: none; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 7px 12px;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    transition: all .15s;
+  }
+  .cl-filter-clear:hover { background: var(--red-bg); color: var(--red); border-color: #fecaca; }
+  .cl-filter-count {
+    font-size: 12px; color: var(--muted); white-space: nowrap;
+    margin-left: auto;
+  }
+  @media (max-width: 768px) {
+    .cl-filter-row { flex-direction: column; align-items: stretch; }
+    .cl-filter-row input[type=text] { min-width: unset; }
+    .cl-filter-count { margin-left: 0; }
+  }
+
   /* ── FATURAMENTO ── */
   .fat-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -2409,8 +2449,8 @@
       </button>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="display:flex;gap:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn-secondary filter-btn active-filter" onclick="filterTable('todos',this)">Todos</button>
         <button class="btn-secondary filter-btn" onclick="filterTable('Aprovado',this)">Aprovados</button>
         <button class="btn-secondary filter-btn" onclick="filterTable('Pendente',this)">Pendentes</button>
@@ -2426,6 +2466,33 @@
         <i class="ti ti-trash"></i>
         <span id="btnExcluirLabel">Excluir selecionados</span>
       </button>
+    </div>
+
+    <!-- Filtros avançados -->
+    <div class="cl-filter-row">
+      <i class="ti ti-search" style="font-size:15px;color:var(--muted);flex-shrink:0"></i>
+      <input type="text" id="clBusca" placeholder="Buscar por ID, motorista ou veículo…"
+        oninput="renderTable()" autocomplete="off">
+      <select id="clFiltroMotorista" onchange="renderTable()">
+        <option value="">Todos motoristas</option>
+      </select>
+      <select id="clFiltroVeiculo" onchange="renderTable()">
+        <option value="">Todos veículos</option>
+      </select>
+      <select id="clFiltroTipo" onchange="renderTable()">
+        <option value="">Todos os tipos</option>
+        <option value="retirada">🔑 Retirada</option>
+        <option value="devolucao">🏠 Devolução</option>
+        <option value="mensal">📅 Mensal</option>
+        <option value="sem-tipo">— Sem tipo</option>
+      </select>
+      <select id="clFiltroMes" onchange="renderTable()">
+        <option value="">Todos os meses</option>
+      </select>
+      <button class="cl-filter-clear" onclick="limparFiltrosChecklist()" title="Limpar filtros">
+        <i class="ti ti-x" style="font-size:12px"></i> Limpar
+      </button>
+      <span class="cl-filter-count" id="clFiltroCount"></span>
     </div>
 
     <div class="table-card">
@@ -3931,6 +3998,11 @@ async function dbLoadChecklists() {
   );
   if (!data) return;
   checklists.length = 0;
+  // Reset filter selects so they repopulate with fresh data
+  ['clFiltroMotorista','clFiltroVeiculo','clFiltroMes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { const first = el.options[0]; el.innerHTML = ''; if (first) el.appendChild(first); }
+  });
   data.forEach(r => {
     let itens = null;
     try { itens = r.itens_result ? JSON.parse(r.itens_result) : null; } catch(e) {}
@@ -4678,11 +4750,45 @@ function renderTopDrivers() {
 // ── CHECKLISTS TABLE ──
 function renderTable(filter) {
   if (filter !== undefined) currentFilter = filter;
-  // Gestor vê apenas checklists de motoristas (setor 'motorista' ou sem setor definido)
+
+  // Gestor vê apenas checklists de motoristas
   const motoristaCls = checklists.filter(c => !c.setor || c.setor === 'motorista');
-  const list = currentFilter === 'todos'
+
+  // Populate filter selects (only once or when data changes)
+  _populateChecklistSelects(motoristaCls);
+
+  // --- Filtros ---
+  const busca    = (document.getElementById('clBusca')?.value || '').toLowerCase().trim();
+  const fMot     = document.getElementById('clFiltroMotorista')?.value || '';
+  const fVei     = document.getElementById('clFiltroVeiculo')?.value || '';
+  const fTipo    = document.getElementById('clFiltroTipo')?.value || '';
+  const fMes     = document.getElementById('clFiltroMes')?.value || '';
+
+  let list = currentFilter === 'todos'
     ? motoristaCls
     : motoristaCls.filter(c => c.status === currentFilter);
+
+  if (busca)  list = list.filter(c =>
+    (c.id||'').toLowerCase().includes(busca) ||
+    (c.m||'').toLowerCase().includes(busca)  ||
+    (c.v||'').toLowerCase().includes(busca)
+  );
+  if (fMot)   list = list.filter(c => c.m === fMot);
+  if (fVei)   list = list.filter(c => c.v === fVei);
+  if (fTipo)  list = list.filter(c =>
+    fTipo === 'sem-tipo' ? !c.tipoVistoria : c.tipoVistoria === fTipo
+  );
+  if (fMes)   list = list.filter(c => {
+    if (!c.d) return false;
+    const raw = c.d.split(' ')[0];
+    const p = raw.split('/');
+    if (p.length !== 3) return false;
+    return `${p[2]}-${p[1]}` === fMes;
+  });
+
+  // Contador
+  const countEl = document.getElementById('clFiltroCount');
+  if (countEl) countEl.textContent = `${list.length} registro${list.length !== 1 ? 's' : ''}`;
 
   const tbody = document.getElementById('checklistTable');
   if (!list.length) {
@@ -4734,10 +4840,55 @@ function renderTable(filter) {
       </td>
     </tr>`).join('');
 
-  // Reset select-all checkbox
   const allChk = document.getElementById('selectAllChk');
   if (allChk) allChk.checked = false;
   updateBulkDeleteBtn();
+}
+
+function _populateChecklistSelects(cls) {
+  // Motoristas
+  const selMot = document.getElementById('clFiltroMotorista');
+  if (selMot && selMot.options.length <= 1) {
+    const mots = [...new Set(cls.map(c => c.m).filter(Boolean))].sort();
+    mots.forEach(m => {
+      const o = document.createElement('option');
+      o.value = m; o.textContent = m;
+      selMot.appendChild(o);
+    });
+  }
+  // Veículos
+  const selVei = document.getElementById('clFiltroVeiculo');
+  if (selVei && selVei.options.length <= 1) {
+    const veis = [...new Set(cls.map(c => c.v).filter(Boolean))].sort();
+    veis.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = v;
+      selVei.appendChild(o);
+    });
+  }
+  // Meses
+  const selMes = document.getElementById('clFiltroMes');
+  if (selMes && selMes.options.length <= 1) {
+    const meses = [...new Set(cls.map(c => {
+      if (!c.d) return null;
+      const raw = c.d.split(' ')[0];
+      const p = raw.split('/');
+      return p.length === 3 ? `${p[2]}-${p[1]}` : null;
+    }).filter(Boolean))].sort().reverse();
+    const nomeMes = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    meses.forEach(m => {
+      const [ano, mes] = m.split('-');
+      const o = document.createElement('option');
+      o.value = m; o.textContent = `${nomeMes[+mes] || mes}/${ano}`;
+      selMes.appendChild(o);
+    });
+  }
+}
+
+function limparFiltrosChecklist() {
+  const ids = ['clBusca','clFiltroMotorista','clFiltroVeiculo','clFiltroTipo','clFiltroMes'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  renderTable();
 }
 
 function filterTable(f, el) {
