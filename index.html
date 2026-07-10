@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- QR Code -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   #syncStatus {
     display: none;
@@ -185,7 +187,7 @@
   /* ── CHARTS ROW ── */
   .charts-row {
     display: grid;
-    grid-template-columns: 260px 1fr 280px;
+    grid-template-columns: 260px 1fr;
     gap: 14px;
     margin-bottom: 14px;
     align-items: start;
@@ -1813,6 +1815,199 @@
     .stat-num { font-size: 20px; }
     .main { padding: 14px 10px; }
   }
+
+  /* ── FATURAMENTO ── */
+  .fat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .fat-month-select {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fat-month-select select {
+    padding: 6px 10px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 13px;
+    font-family: inherit; color: var(--text); background: #fff;
+    outline: none; cursor: pointer;
+  }
+  .fat-month-select select:focus { border-color: var(--accent); }
+
+  .fat-table { width: 100%; border-collapse: collapse; }
+  .fat-table thead th {
+    padding: 9px 14px; font-size: 11px; font-weight: 700;
+    color: var(--muted); text-transform: uppercase; letter-spacing: .5px;
+    background: #f8fafc; border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .fat-table thead th:last-child,
+  .fat-table thead th:nth-child(3),
+  .fat-table thead th:nth-child(4) { text-align: right; }
+
+  .fat-table tbody td {
+    padding: 10px 14px; font-size: 13px; color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .fat-table tbody tr:last-child td { border-bottom: none; }
+  .fat-table tbody tr:hover { background: #fafbfc; }
+
+  .fat-input {
+    width: 100%; max-width: 160px;
+    padding: 7px 10px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 13px; font-family: inherit; color: var(--text);
+    text-align: right; outline: none; background: #fff;
+    transition: border-color .15s;
+  }
+  .fat-input:focus { border-color: var(--accent); }
+
+  .fat-table tfoot td {
+    padding: 10px 14px; font-size: 13px; font-weight: 700;
+    border-top: 2px solid var(--border); background: #f8fafc;
+  }
+  .fat-bonus-cell { text-align: right; font-weight: 700; }
+  .fat-fat-cell   { text-align: right; }
+  .fat-check-cell { text-align: right; }
+  .fat-tfoot-right { text-align: right; }
+
+  .fat-badge-sim {
+    background: var(--green-bg); color: var(--green);
+    font-size: 11px; font-weight: 700; padding: 3px 9px;
+    border-radius: 20px; white-space: nowrap;
+  }
+  .fat-badge-nao {
+    background: #f1f5f9; color: #94a3b8;
+    font-size: 11px; font-weight: 700; padding: 3px 9px;
+    border-radius: 20px; white-space: nowrap;
+  }
+
+  .fat-section {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border); margin-bottom: 22px; overflow: hidden;
+  }
+  .fat-section-header {
+    padding: 16px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .fat-section-title {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fat-section-body { padding: 0; overflow-x: auto; }
+  .fat-section-footer {
+    padding: 14px 18px; border-top: 1px solid var(--border);
+    background: #f8fafc;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .fat-summary {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .fat-summary-item { font-size: 12px; color: var(--muted); }
+  .fat-summary-val  { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 2px; }
+
+  @media (max-width: 768px) {
+    .fat-input { max-width: 110px; }
+    .fat-table thead th, .fat-table tbody td, .fat-table tfoot td { padding: 8px 10px; }
+  }
+
+  /* ── AGENDA ── */
+  .agenda-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .agenda-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+  .agenda-card-header {
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .agenda-plate-badge {
+    background: var(--navy);
+    color: #fff;
+    font-size: 13px; font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 7px;
+    letter-spacing: .5px;
+    white-space: nowrap;
+  }
+
+  .agenda-veiculo-info { flex: 1; min-width: 0; }
+  .agenda-veiculo-modelo { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agenda-veiculo-tipo { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .agenda-countdown-wrap {
+    padding: 20px 16px;
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .agenda-ring-wrap {
+    position: relative;
+    width: 72px; height: 72px; flex-shrink: 0;
+  }
+
+  .agenda-ring-svg {
+    transform: rotate(-90deg);
+  }
+
+  .agenda-ring-days {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .agenda-ring-num {
+    font-size: 20px; font-weight: 700; line-height: 1;
+    color: var(--text);
+  }
+
+  .agenda-ring-label {
+    font-size: 9px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .3px;
+    margin-top: 1px;
+  }
+
+  .agenda-info { flex: 1; min-width: 0; }
+  .agenda-info-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .agenda-info-row { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+
+  .agenda-card-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: #f8fafc;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .agenda-bar-track {
+    flex: 1; height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-right: 10px;
+  }
+
+  .agenda-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .4s ease;
+  }
+
+  .agenda-due-label {
+    font-size: 11px; font-weight: 700;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    #agendaGrid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -1862,11 +2057,15 @@
       <i class="ti ti-car"></i>Veículos
     </div>
     <div class="nav-section">Desempenho</div>
-    <div class="nav-item" onclick="mobileNav('ranking',this)">
-      <i class="ti ti-trophy"></i>Ranking
-    </div>
     <div class="nav-item" onclick="mobileNav('premiacoes',this)">
       <i class="ti ti-medal"></i>Premiações
+    </div>
+    <div class="nav-section">Planejamento</div>
+    <div class="nav-item" onclick="mobileNav('agenda',this)">
+      <i class="ti ti-calendar-event"></i>Agenda
+    </div>
+    <div class="nav-item" onclick="mobileNav('fechamento',this)">
+      <i class="ti ti-calendar-stats"></i>Fechamento Mensal
     </div>
   </nav>
   <div style="padding:14px 18px;border-top:1px solid rgba(255,255,255,0.07)">
@@ -2017,11 +2216,21 @@
     </div>
 
     <div class="nav-section">Desempenho</div>
-    <div class="nav-item" onclick="showPage('ranking',this)">
-      <i class="ti ti-trophy"></i>Ranking
-    </div>
     <div class="nav-item" onclick="showPage('premiacoes',this)">
       <i class="ti ti-medal"></i>Premiações
+    </div>
+
+    <div class="nav-section">Planejamento</div>
+    <div class="nav-item" onclick="showPage('agenda',this)">
+      <i class="ti ti-calendar-event"></i>Agenda
+    </div>
+    <div class="nav-item" onclick="showPage('fechamento',this)">
+      <i class="ti ti-calendar-stats"></i>Fechamento Mensal
+    </div>
+
+    <div class="nav-section">Acesso</div>
+    <div class="nav-item" onclick="showPage('qrcode',this)">
+      <i class="ti ti-qrcode"></i>QR Code
     </div>
   </nav>
 
@@ -2112,11 +2321,6 @@
         <div class="card-title">Veículos com Mais Vistorias</div>
         <div class="bar-scroll-wrap"><div class="bar-area" id="barChart"></div></div>
       </div>
-
-      <div class="chart-card">
-        <div class="card-title"><i class="ti ti-trophy" style="color:#d97706"></i>Top Motoristas</div>
-        <div class="top-drivers" id="topDrivers"></div>
-      </div>
     </div>
 
     <div class="bottom-row">
@@ -2149,6 +2353,48 @@
         </div>
       </div>
     </div>
+
+    <!-- PENDÊNCIAS CHECKLIST MENSAL -->
+    <div id="dashPendMensalPanel" style="margin-top:14px;display:none">
+      <div class="table-card">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);
+          display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--orange-bg);
+              display:flex;align-items:center;justify-content:center">
+              <i class="ti ti-calendar-x" style="font-size:17px;color:var(--orange)"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text)">Veículos Pendentes — Checklist Mensal</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">Veículos sem checklist mensal válido nos últimos 30 dias</div>
+            </div>
+          </div>
+          <span id="dashPendMensalBadge"
+            style="background:var(--orange-bg);color:var(--orange);font-size:11px;
+              font-weight:700;padding:3px 10px;border-radius:20px"></span>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="padding:9px 16px;font-size:11px;font-weight:700;color:var(--muted);
+                text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;
+                border-bottom:1px solid var(--border);text-align:left">Placa</th>
+              <th style="padding:9px 16px;font-size:11px;font-weight:700;color:var(--muted);
+                text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;
+                border-bottom:1px solid var(--border);text-align:left">Veículo</th>
+              <th style="padding:9px 16px;font-size:11px;font-weight:700;color:var(--muted);
+                text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;
+                border-bottom:1px solid var(--border);text-align:left">Último Mensal</th>
+              <th style="padding:9px 16px;font-size:11px;font-weight:700;color:var(--muted);
+                text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;
+                border-bottom:1px solid var(--border);text-align:left">Situação</th>
+            </tr>
+          </thead>
+          <tbody id="dashPendMensalBody"></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
   <!-- CHECKLISTS -->
@@ -2376,16 +2622,237 @@
     <div class="page-header">
       <div>
         <div class="page-title">Premiações</div>
-        <div class="page-sub">Gerencie campanhas de premiação</div>
+        <div class="page-sub">Gerencie campanhas de premiação e bônus de faturamento</div>
       </div>
       <button class="btn-primary" onclick="openCampanhaModal()">
         <i class="ti ti-plus"></i>Nova Campanha
       </button>
     </div>
+
+    <!-- ── FATURAMENTO MENSAL ── -->
+    <div class="fat-section">
+      <div class="fat-section-header">
+        <div class="fat-section-title">
+          <i class="ti ti-currency-dollar" style="font-size:18px;color:var(--green)"></i>
+          Faturamento Mensal &amp; Bônus (0,4%)
+        </div>
+        <div class="fat-month-select">
+          <i class="ti ti-calendar-month" style="font-size:15px;color:var(--muted)"></i>
+          <select id="fatMesSelect" onchange="renderFaturamento()"></select>
+        </div>
+      </div>
+
+      <div class="fat-section-body">
+        <table class="fat-table">
+          <thead>
+            <tr>
+              <th style="width:40%">Motorista</th>
+              <th class="fat-fat-cell">Faturamento (R$)</th>
+              <th class="fat-check-cell">Checklist</th>
+              <th class="fat-bonus-cell">Bônus 0,4%</th>
+            </tr>
+          </thead>
+          <tbody id="fatTbody"></tbody>
+          <tfoot id="fatTfoot"></tfoot>
+        </table>
+      </div>
+
+      <div class="fat-section-footer">
+        <div class="fat-summary" id="fatSummary"></div>
+        <button class="btn-primary" onclick="saveFaturamentos()" style="gap:6px">
+          <i class="ti ti-device-floppy"></i>Salvar Faturamentos
+        </button>
+      </div>
+    </div>
+
+    <!-- ── CAMPANHAS ── -->
+    <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.5px;margin-bottom:12px">Campanhas de Premiação</div>
     <div class="premios-grid" id="premiosGrid"></div>
   </div>
 
+  <!-- QR CODE PAGE -->
+  <div class="page" id="p-qrcode">
+    <div class="page-header">
+      <div>
+        <div class="page-title">QR Code de Acesso</div>
+        <div class="page-sub">Escaneie para abrir o AutoCheck no celular</div>
+      </div>
+      <button class="btn-secondary" onclick="downloadQR()">
+        <i class="ti ti-download"></i> Baixar QR Code
+      </button>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-top:30px;">
+      <div style="background:#fff;border-radius:20px;padding:40px 48px 32px;box-shadow:0 8px 40px rgba(0,0,0,0.12);display:flex;flex-direction:column;align-items:center;gap:20px;max-width:380px;width:100%;">
+
+        <!-- Logo -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <i class="ti ti-checkup-list" style="font-size:26px;color:var(--accent)"></i>
+          <span style="font-size:20px;font-weight:800;color:var(--navy)">AutoCheck</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:-14px;">Painel de Vistorias</div>
+
+        <!-- QR Code container -->
+        <div id="qrcodeCanvas" style="padding:12px;border:2px solid var(--border);border-radius:12px;background:#fff;"></div>
+
+        <!-- URL -->
+        <div style="font-size:12px;color:var(--muted);word-break:break-all;text-align:center;max-width:280px;">
+          <i class="ti ti-link" style="margin-right:4px;"></i>autocheck-kmlog.vercel.app
+        </div>
+
+        <!-- Instruction -->
+        <div style="background:var(--blue-bg);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--blue);text-align:center;width:100%;box-sizing:border-box;">
+          <i class="ti ti-device-mobile" style="margin-right:4px;"></i>
+          Aponte a câmera do celular para o código e acesse o app instantaneamente
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FECHAMENTO MENSAL -->
+  <div class="page" id="p-fechamento">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Fechamento Mensal</div>
+        <div class="page-sub">Período de 21 a 20 do mês seguinte — histórico de ciclos</div>
+      </div>
+      <button class="btn-primary" id="btnFecharPeriodo" onclick="confirmarFechamento()">
+        <i class="ti ti-lock"></i>Fechar Período Atual
+      </button>
+    </div>
+
+    <!-- Período atual -->
+    <div style="background:linear-gradient(135deg,var(--navy) 0%,var(--navy3) 100%);
+      border-radius:var(--radius);padding:20px 24px;margin-bottom:18px;color:#fff">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.45);
+        text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Período em Andamento</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+        <div>
+          <div style="font-size:22px;font-weight:700" id="fechPeriodoLabel">—</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:3px" id="fechPeriodoDatas">—</div>
+        </div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div style="text-align:center">
+            <div style="font-size:28px;font-weight:700;color:#4ade80" id="fechQtdOk">—</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45)">Realizaram</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:28px;font-weight:700;color:#f87171" id="fechQtdPend">—</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45)">Pendentes</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:28px;font-weight:700;color:#60a5fa" id="fechDiasRestantes">—</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45)">Dias restantes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status caminhões no período -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px" id="fechStatusGrid"></div>
+
+    <!-- Histórico -->
+    <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.5px;margin-bottom:10px">Histórico de Fechamentos</div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Período</th>
+            <th>Início</th>
+            <th>Fim</th>
+            <th>Fechado em</th>
+            <th style="text-align:center">Realizaram</th>
+            <th style="text-align:center">Pendentes</th>
+          </tr>
+        </thead>
+        <tbody id="fechHistoricoBody"></tbody>
+      </table>
+      <div id="fechHistoricoEmpty" style="padding:40px;text-align:center;color:var(--muted);display:none">
+        <i class="ti ti-history" style="font-size:36px;opacity:.2;display:block;margin-bottom:10px"></i>
+        Nenhum fechamento realizado ainda.
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENDA -->
+  <div class="page" id="p-agenda">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Agenda</div>
+        <div class="page-sub">Contagem regressiva dos checklists mensais por veículo</div>
+      </div>
+      <button class="btn-primary" onclick="renderAgenda()">
+        <i class="ti ti-refresh"></i>Atualizar
+      </button>
+    </div>
+
+    <!-- Legenda -->
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--green)"></div> Em dia (≥8 dias)
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--orange)"></div> Atenção (1–7 dias)
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--red)"></div> Vencido
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+        <div style="width:12px;height:12px;border-radius:50%;background:#94a3b8"></div> Sem checklist
+      </div>
+    </div>
+
+    <!-- Cards grid -->
+    <div id="agendaGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>
+
+    <!-- Empty state -->
+    <div id="agendaEmpty" style="display:none;text-align:center;padding:60px 20px">
+      <i class="ti ti-calendar-off" style="font-size:48px;color:var(--border);display:block;margin-bottom:12px"></i>
+      <div style="font-size:15px;font-weight:600;color:var(--muted)">Nenhum veículo cadastrado</div>
+      <div style="font-size:13px;color:var(--border);margin-top:4px">Cadastre veículos para monitorar os checklists mensais</div>
+    </div>
+  </div>
+
 </main>
+
+<script>
+// Gera o QR Code quando a página qrcode é exibida
+(function() {
+  const _origShowPage = window.showPage;
+  window.showPage = function(id, el) {
+    if (typeof _origShowPage === 'function') _origShowPage(id, el);
+    if (id === 'qrcode') setTimeout(initQR, 50);
+  };
+})();
+
+function initQR() {
+  const container = document.getElementById('qrcodeCanvas');
+  if (!container || container.querySelector('canvas') || container.querySelector('img')) return;
+  container.innerHTML = '';
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(container, {
+      text: 'https://autocheck-kmlog.vercel.app',
+      width: 220,
+      height: 220,
+      colorDark: '#0d1b35',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
+}
+
+function downloadQR() {
+  const canvas = document.querySelector('#qrcodeCanvas canvas');
+  if (!canvas) { showToast('Abra a página QR Code primeiro!', true); return; }
+  const link = document.createElement('a');
+  link.download = 'autocheck-qrcode.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+</script>
 
 <!-- MODAL NOVO CHECKLIST -->
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
@@ -3537,6 +4004,42 @@ async function dbLoadCampanhas() {
   if (data.length) campanhaIdCounter = Math.max(...data.map(r => r.id)) + 1;
 }
 
+async function dbLoadFechamentos() {
+  const sb = getSB(); if (!sb) return;
+  const data = await dbRun('carregar fechamentos', () =>
+    sb.from('fechamentos_mensais').select('*').order('id', { ascending: true })
+  );
+  if (!data) return;
+  fechamentos.length = 0;
+  data.forEach(r => fechamentos.push({
+    id:         r.id,
+    dbId:       r.id,
+    label:      r.label,
+    inicioStr:  r.inicio_str,
+    fimStr:     r.fim_str,
+    fechadoEm:  r.fechado_em,
+    realizaram: r.realizaram || [],
+    pendentes:  r.pendentes  || []
+  }));
+}
+
+async function dbSaveFechamento(f) {
+  const sb = getSB(); if (!sb) return null;
+  const payload = {
+    label:      f.label,
+    inicio_str: f.inicioStr,
+    fim_str:    f.fimStr,
+    fechado_em: f.fechadoEm,
+    realizaram: f.realizaram,
+    pendentes:  f.pendentes
+  };
+  const data = await dbRun('salvar fechamento', () =>
+    sb.from('fechamentos_mensais').insert(payload).select().single()
+  );
+  if (data) f.dbId = data.id;
+  return data ? data.id : null;
+}
+
 // ── ESCRITA ──────────────────────────────────────────────────
 
 async function dbSaveMotorista(d) {
@@ -3780,7 +4283,8 @@ async function dbLoadAll() {
       dbLoadVeiculos(),
       dbLoadChecklists(),
       dbLoadModelos(),
-      dbLoadCampanhas()
+      dbLoadCampanhas(),
+      dbLoadFechamentos()
     ]);
     // Seed automático: se não há modelos no banco, cria o modelo padrão
     if (modelos.length === 0) {
@@ -3878,7 +4382,9 @@ function showPage(id, el) {
     manutencao: renderManutencao,
     veiculos:   renderVeiculos,
     premiacoes: renderPremios,
-    modelos:    renderModelos
+    modelos:    renderModelos,
+    agenda:     renderAgenda,
+    fechamento: renderFechamento
   };
 
   if (renders[id]) renders[id]();
@@ -3907,10 +4413,11 @@ function renderDashboard() {
   drawPie(aprov, pend, reprov);
   drawBar();
   drawTrend();
-  renderTopDrivers();
 
   // Calcular alertas de devolução pendente a partir dos dados reais
   renderAlertasDevolucao();
+  // Veículos com checklist mensal pendente
+  renderPendMensal();
 }
 
 function renderAlertasDevolucao() {
@@ -3919,43 +4426,38 @@ function renderAlertasDevolucao() {
   const badge  = document.getElementById('alertasDevolucaoBadge');
   if (!panel || !lista) return;
 
-  // Alertas em memória (registrados em tempo real)
   const alertas = window._alertasDevolucao || [];
+  if (!window._alertasDismissedPlacas) window._alertasDismissedPlacas = new Set();
 
-  // Também detectar automaticamente dos checklists: veículos com último registro != devolução
   const motCls = checklists.filter(c => !c.setor || c.setor === 'motorista');
   const placas = [...new Set(motCls.map(c => c.v))];
   const alertasDetectados = [];
 
   placas.forEach(placa => {
+    if (window._alertasDismissedPlacas.has(placa)) return;
     const cls = motCls.filter(c => c.v === placa).sort((a, b) => b.id.localeCompare(a.id));
     if (!cls.length) return;
     const ultimo = cls[0];
     if (ultimo.tipoVistoria && ultimo.tipoVistoria !== 'devolucao') {
-      // Verifica se já está na lista
       const jaExiste = alertas.some(a => a.placa === placa);
       if (!jaExiste) {
-        alertasDetectados.push({
-          placa, motorista: ultimo.m, data: ultimo.d,
-          tipo: ultimo.tipoVistoria
-        });
+        alertasDetectados.push({ placa, motorista: ultimo.m, data: ultimo.d,
+          tipo: ultimo.tipoVistoria, _auto: true });
       }
     }
   });
 
-  const todos = [...alertas.map(a => ({...a, tipo: a.tipo || 'retirada'})), ...alertasDetectados];
+  const manuais = alertas.map((a, i) => ({ ...a, tipo: a.tipo || 'retirada', _manualIdx: i, _auto: false }));
+  const todos   = [...manuais, ...alertasDetectados];
 
-  if (!todos.length) {
-    panel.style.display = 'none';
-    return;
-  }
-
+  if (!todos.length) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
   if (badge) badge.textContent = todos.length;
 
-  lista.innerHTML = todos.map((a, i) => `
-    <div style="background:rgba(220,38,38,.12);border-radius:8px;padding:10px 14px;
-      display:flex;align-items:center;gap:10px">
+  lista.innerHTML = todos.map(a => {
+    const d = encodeURIComponent(JSON.stringify({ auto: a._auto, placa: a.placa }));
+    return `<div style="background:rgba(220,38,38,.12);border-radius:8px;padding:10px 14px;
+        display:flex;align-items:center;gap:10px">
       <i class="ti ti-car" style="font-size:16px;color:#f87171;flex-shrink:0"></i>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:700;color:#fca5a5">
@@ -3965,25 +4467,84 @@ function renderAlertasDevolucao() {
         </div>
         <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">
           Motorista: <strong style="color:rgba(255,255,255,.85)">${a.motorista}</strong>
-          ${a.data ? ' · ' + a.data : ''}
+          ${a.data ? ' &middot; ' + a.data : ''}
         </div>
       </div>
-      <button onclick="_dismissAlertaDevolucao(${i})" style="background:none;border:none;
-        cursor:pointer;color:rgba(255,255,255,.3);font-size:16px">✕</button>
-    </div>`).join('');
+      <button onclick="_dismissAlertaDevolucao('${d}')"
+        style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);
+               font-size:20px;line-height:1;padding:2px 8px;border-radius:6px"
+        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.5)'">✕</button>
+    </div>`;
+  }).join('');
 }
 
-function _dismissAlertaDevolucao(idx) {
-  // Remove o alerta da lista global
-  if (!window._alertasDevolucao) window._alertasDevolucao = [];
-  // Recalcula índice entre os alertas em memória
-  window._alertasDevolucao.splice(idx, 1);
+function _dismissAlertaDevolucao(dataStr) {
+  try {
+    const info = JSON.parse(decodeURIComponent(dataStr));
+    if (!window._alertasDismissedPlacas) window._alertasDismissedPlacas = new Set();
+    if (info.auto) {
+      window._alertasDismissedPlacas.add(info.placa);
+    } else {
+      if (!window._alertasDevolucao) window._alertasDevolucao = [];
+      const idx = window._alertasDevolucao.findIndex(a => a.placa === info.placa);
+      if (idx !== -1) window._alertasDevolucao.splice(idx, 1);
+    }
+  } catch(e) { console.warn('dismiss error', e); }
   renderAlertasDevolucao();
 }
 
 function limparAlertasDevolucao() {
   window._alertasDevolucao = [];
+  window._alertasDismissedPlacas = new Set();
   renderAlertasDevolucao();
+}
+
+function renderPendMensal() {
+  const panel = document.getElementById('dashPendMensalPanel');
+  const tbody = document.getElementById('dashPendMensalBody');
+  const badge = document.getElementById('dashPendMensalBadge');
+  if (!panel || !tbody) return;
+
+  // Usa o período atual (21 → 20) para verificar caminhões pendentes
+  const { pendentes: listaPend, ok: listaOk } = getCaminhoesPeriodo
+    ? getCaminhoesPeriodo()
+    : { pendentes: [], ok: [] };
+
+  // Último mensal de cada placa (para exibir data)
+  const mensais = checklists.filter(c => c.tipoVistoria === 'mensal' && isInPeriodoAtual(c.d));
+  const porPlaca = {};
+  mensais.forEach(c => {
+    if (!porPlaca[c.v]) { porPlaca[c.v] = { d: c.d, m: c.m }; }
+  });
+
+  if (!listaPend.length) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  const { label } = getPeriodoAtual();
+  panel.style.display = 'block';
+  if (badge) badge.textContent = listaPend.length + ' pendente' + (listaPend.length > 1 ? 's' : '') + ' · ' + label;
+
+  tbody.innerHTML = listaPend.map((v, i) => {
+    const borderBottom = i < listaPend.length - 1 ? 'border-bottom:1px solid var(--border)' : '';
+    const statusHtml = `<span style="background:#f1f5f9;color:#64748b;font-size:11px;
+      font-weight:700;padding:3px 10px;border-radius:20px">Pendente neste período</span>`;
+    return `<tr style="${borderBottom}">
+      <td style="padding:11px 16px">
+        <span style="background:var(--navy);color:#fff;font-size:12px;font-weight:700;
+          padding:3px 9px;border-radius:6px;letter-spacing:.4px">${v.placa}</span>
+      </td>
+      <td style="padding:11px 16px;font-size:13px;color:var(--text)">
+        <div style="font-weight:500">${v.modelo || '—'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px">${v.tipo || ''} ${v.ano ? '· ' + v.ano : ''}</div>
+      </td>
+      <td style="padding:11px 16px;font-size:13px;color:var(--muted)">
+        <span style="color:#94a3b8">—</span>
+      </td>
+      <td style="padding:11px 16px">${statusHtml}</td>
+    </tr>`;
+  }).join('');
 }
 
 function drawPie(a, p, r) {
@@ -5751,7 +6312,210 @@ const tipoIcone = {
   'Qtd. Checklists': '📋', 'Zero Reprovação': '🌟', 'Assiduidade': '📅', 'Personalizado': '🎯'
 };
 
+// ── FATURAMENTO MENSAL ──
+// Estrutura: { 'YYYY-MM': { 'Nome Motorista': valor } }
+let faturamentos = {};
+
+function fatPopulateMeses() {
+  const sel = document.getElementById('fatMesSelect');
+  if (!sel || sel.options.length > 0) return;
+  const hoje = new Date();
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                 'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  // Gerar 12 meses para trás + 2 para frente
+  for (let i = -12; i <= 2; i++) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label = `${meses[d.getMonth()]} ${d.getFullYear()}`;
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = label;
+    if (i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function fatDriversWithChecklist(mesKey) {
+  // Retorna Set de nomes de motoristas que fizeram checklist no mês selecionado
+  const [ano, mes] = mesKey.split('-').map(Number);
+  const comCk = new Set();
+  checklists.forEach(c => {
+    if (!c.d) return;
+    const p = c.d.split('/');
+    if (p.length !== 3) return;
+    const cAno = +p[2], cMes = +p[1];
+    if (cAno === ano && cMes === mes) comCk.add(c.m);
+  });
+  return comCk;
+}
+
+function renderFaturamento() {
+  fatPopulateMeses();
+  const sel    = document.getElementById('fatMesSelect');
+  const mesKey = sel ? sel.value : null;
+  if (!mesKey) return;
+
+  const tbody  = document.getElementById('fatTbody');
+  const tfoot  = document.getElementById('fatTfoot');
+  const sumEl  = document.getElementById('fatSummary');
+  if (!tbody) return;
+
+  const comCk     = fatDriversWithChecklist(mesKey);
+  const valoresMes = faturamentos[mesKey] || {};
+  const mots      = drivers.filter(d => d.ativo !== false);
+
+  const fmt = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+
+  let totalFat  = 0;
+  let totalBon  = 0;
+  let qtdBonus  = 0;
+
+  tbody.innerHTML = mots.map(d => {
+    const val   = valoresMes[d.n] || 0;
+    const temCk = comCk.has(d.n);
+    const bonus = temCk ? val * 0.004 : 0;
+    totalFat += val;
+    totalBon += bonus;
+    if (temCk && val > 0) qtdBonus++;
+
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar av${drivers.indexOf(d) % 10}"
+            style="width:28px;height:28px;font-size:10px;font-weight:700;border-radius:50%;
+                   display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">
+            ${d.n.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase()}
+          </div>
+          <span style="font-weight:500">${d.n}</span>
+        </div>
+      </td>
+      <td style="text-align:right">
+        <input class="fat-input" type="text" inputmode="decimal"
+          id="fat-${d.n.replace(/\s+/g,'_')}"
+          value="${val > 0 ? val.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : ''}"
+          placeholder="0,00"
+          oninput="fatUpdateRow(this, '${d.n.replace(/'/g,"\\'")}', ${temCk})"
+          onfocus="this.select()"
+        >
+      </td>
+      <td class="fat-check-cell">
+        <span class="${temCk ? 'fat-badge-sim' : 'fat-badge-nao'}">
+          ${temCk ? '✅ Sim' : '✗ Não'}
+        </span>
+      </td>
+      <td class="fat-bonus-cell" id="fat-bonus-${d.n.replace(/\s+/g,'_')}" style="color:${temCk && val > 0 ? 'var(--green)' : 'var(--muted)'}">
+        ${temCk && val > 0 ? fmt(bonus) : '—'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  tfoot.innerHTML = `<tr>
+    <td style="font-weight:700">Total</td>
+    <td class="fat-tfoot-right" id="fat-total-fat">${fmt(totalFat)}</td>
+    <td></td>
+    <td class="fat-tfoot-right" id="fat-total-bon" style="color:var(--green)">${fmt(totalBon)}</td>
+  </tr>`;
+
+  sumEl.innerHTML = `
+    <div class="fat-summary-item">
+      <div>Total Faturamento</div>
+      <div class="fat-summary-val">${fmt(totalFat)}</div>
+    </div>
+    <div style="width:1px;height:36px;background:var(--border)"></div>
+    <div class="fat-summary-item">
+      <div>Total Bônus (0,4%)</div>
+      <div class="fat-summary-val" style="color:var(--green)">${fmt(totalBon)}</div>
+    </div>
+    <div style="width:1px;height:36px;background:var(--border)"></div>
+    <div class="fat-summary-item">
+      <div>Motoristas contemplados</div>
+      <div class="fat-summary-val" style="color:var(--blue)">${qtdBonus}</div>
+    </div>
+  `;
+}
+
+function fatUpdateRow(input, nomeMotorista, temCk) {
+  // Limpa caracteres não numéricos exceto vírgula/ponto
+  let raw = input.value.replace(/[^\d,\.]/g, '').replace(',', '.');
+  const val = parseFloat(raw) || 0;
+  const fmt = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+  const bonus = temCk ? val * 0.004 : 0;
+
+  const key = nomeMotorista.replace(/\s+/g,'_');
+  const bonusEl = document.getElementById('fat-bonus-' + key);
+  if (bonusEl) {
+    bonusEl.textContent = temCk && val > 0 ? fmt(bonus) : '—';
+    bonusEl.style.color = temCk && val > 0 ? 'var(--green)' : 'var(--muted)';
+  }
+
+  // Atualizar totais
+  let totalFat = 0, totalBon = 0;
+  drivers.filter(d => d.ativo !== false).forEach(d => {
+    const ipt = document.getElementById('fat-' + d.n.replace(/\s+/g,'_'));
+    const v   = ipt ? (parseFloat(ipt.value.replace(/[^\d,\.]/g,'').replace(',','.')) || 0) : 0;
+    const sel = document.getElementById('fatMesSelect');
+    const comCk = sel ? fatDriversWithChecklist(sel.value) : new Set();
+    const b = comCk.has(d.n) ? v * 0.004 : 0;
+    totalFat += v;
+    totalBon += b;
+  });
+
+  const tf = document.getElementById('fat-total-fat');
+  const tb = document.getElementById('fat-total-bon');
+  if (tf) tf.textContent = fmt(totalFat);
+  if (tb) { tb.textContent = fmt(totalBon); tb.style.color = 'var(--green)'; }
+
+  // Atualiza resumo
+  const sumEl = document.getElementById('fatSummary');
+  if (sumEl) {
+    const qtdB = drivers.filter(d => {
+      const ipt = document.getElementById('fat-' + d.n.replace(/\s+/g,'_'));
+      const v = ipt ? (parseFloat(ipt.value.replace(/[^\d,\.]/g,'').replace(',','.')) || 0) : 0;
+      const sel2 = document.getElementById('fatMesSelect');
+      const ck2 = sel2 ? fatDriversWithChecklist(sel2.value) : new Set();
+      return ck2.has(d.n) && v > 0;
+    }).length;
+    sumEl.innerHTML = `
+      <div class="fat-summary-item"><div>Total Faturamento</div><div class="fat-summary-val">${fmt(totalFat)}</div></div>
+      <div style="width:1px;height:36px;background:var(--border)"></div>
+      <div class="fat-summary-item"><div>Total Bônus (0,4%)</div><div class="fat-summary-val" style="color:var(--green)">${fmt(totalBon)}</div></div>
+      <div style="width:1px;height:36px;background:var(--border)"></div>
+      <div class="fat-summary-item"><div>Motoristas contemplados</div><div class="fat-summary-val" style="color:var(--blue)">${qtdB}</div></div>
+    `;
+  }
+}
+
+function saveFaturamentos() {
+  const sel = document.getElementById('fatMesSelect');
+  if (!sel) return;
+  const mesKey = sel.value;
+  const valores = {};
+  drivers.filter(d => d.ativo !== false).forEach(d => {
+    const ipt = document.getElementById('fat-' + d.n.replace(/\s+/g,'_'));
+    if (!ipt) return;
+    const raw = ipt.value.replace(/[^\d,\.]/g,'').replace(',','.');
+    const val = parseFloat(raw) || 0;
+    if (val > 0) valores[d.n] = val;
+  });
+  faturamentos[mesKey] = valores;
+
+  // Persistência local simples
+  try { localStorage.setItem('autocheck_faturamentos', JSON.stringify(faturamentos)); } catch(e) {}
+
+  showToast('Faturamentos salvos com sucesso!');
+  renderFaturamento();
+}
+
+function fatLoadLocal() {
+  try {
+    const s = localStorage.getItem('autocheck_faturamentos');
+    if (s) faturamentos = JSON.parse(s);
+  } catch(e) {}
+}
+
 function renderPremios() {
+  fatPopulateMeses();
+  renderFaturamento();
   const grid = document.getElementById('premiosGrid');
   if (!campanhas.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)">
@@ -7395,6 +8159,304 @@ function getSignatureDataURL() {
   const canvas = document.getElementById('sigCanvas');
   return canvas ? canvas.toDataURL('image/png') : null;
 }
+// ══════════════════════════════════════════
+// PERÍODO / FECHAMENTO MENSAL
+// ══════════════════════════════════════════
+let fechamentos = [];
+
+function getPeriodoAtual() {
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  let inicio;
+  if (hoje.getDate() >= 21) {
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 21);
+  } else {
+    inicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 21);
+  }
+  const fim = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 20);
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const mesesFull = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const label = `${mesesFull[inicio.getMonth()]}/${meses[fim.getMonth()]} ${fim.getFullYear()}`;
+  const fmtD = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  return { inicio, fim, label, inicioStr: fmtD(inicio), fimStr: fmtD(fim) };
+}
+
+function isInPeriodoAtual(dateStr) {
+  if (!dateStr) return false;
+  const raw = dateStr.split(' ')[0]; // strip time if any
+  const p = raw.split('/');
+  if (p.length !== 3) return false;
+  const d = new Date(+p[2], +p[1]-1, +p[0]);
+  d.setHours(0,0,0,0);
+  const { inicio, fim } = getPeriodoAtual();
+  return d >= inicio && d <= fim;
+}
+
+function getCaminhoesPeriodo() {
+  const { inicio, fim } = getPeriodoAtual();
+  const caminhoes = (veiculos || []).filter(v =>
+    v.ativo !== false &&
+    ((v.tipo||'').trim().toLowerCase() === 'caminhão' || (v.tipo||'').trim().toLowerCase() === 'caminhao')
+  );
+  // Checklists mensais no período atual
+  const mensaisPeriodo = checklists.filter(c => {
+    if (c.tipoVistoria !== 'mensal') return false;
+    return isInPeriodoAtual(c.d);
+  });
+  const placasOk = new Set(mensaisPeriodo.map(c => c.v));
+  return {
+    caminhoes,
+    ok:      caminhoes.filter(v => placasOk.has(v.placa)),
+    pendentes: caminhoes.filter(v => !placasOk.has(v.placa)),
+    mensaisPeriodo
+  };
+}
+
+function saveFechamentos() {
+  // Fallback localStorage (Supabase salva via dbSaveFechamento individualmente)
+  try { localStorage.setItem('autocheck_fechamentos', JSON.stringify(fechamentos)); } catch(e) {}
+}
+function loadFechamentos() {
+  // Tentativa de recuperar do localStorage enquanto o Supabase não carregou
+  try {
+    const s = localStorage.getItem('autocheck_fechamentos');
+    if (s && !fechamentos.length) fechamentos = JSON.parse(s);
+  } catch(e) {}
+}
+
+function renderFechamento() {
+  const { inicio, fim, label, inicioStr, fimStr } = getPeriodoAtual();
+  const { caminhoes, ok, pendentes } = getCaminhoesPeriodo();
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const diasRestantes = Math.max(0, Math.ceil((fim - hoje) / (1000*60*60*24)));
+
+  // Banner período
+  const lbl = document.getElementById('fechPeriodoLabel');
+  const dts = document.getElementById('fechPeriodoDatas');
+  const qOk = document.getElementById('fechQtdOk');
+  const qPd = document.getElementById('fechQtdPend');
+  const qDr = document.getElementById('fechDiasRestantes');
+  if (lbl) lbl.textContent = label;
+  if (dts) dts.textContent = `${inicioStr} → ${fimStr}`;
+  if (qOk) qOk.textContent = ok.length;
+  if (qPd) qPd.textContent = pendentes.length;
+  if (qDr) qDr.textContent = diasRestantes;
+
+  // Botão fechar — só disponível a partir do dia 21
+  const btn = document.getElementById('btnFecharPeriodo');
+  if (btn) {
+    const podeFechar = hoje.getDate() >= 21;
+    btn.disabled = !podeFechar;
+    btn.title = podeFechar ? 'Fechar o período atual e iniciar novo ciclo' : 'Disponível a partir do dia 21';
+    btn.style.opacity = podeFechar ? '1' : '0.5';
+  }
+
+  // Grid status caminhões
+  const grid = document.getElementById('fechStatusGrid');
+  if (grid) {
+    grid.innerHTML = `
+      <div class="chart-card">
+        <div class="card-title" style="color:var(--green)"><i class="ti ti-circle-check"></i> Realizaram (${ok.length})</div>
+        ${ok.length === 0 ? `<div style="font-size:13px;color:var(--muted);padding:8px 0">Nenhum caminhão realizou mensal neste período.</div>` :
+          ok.map(v => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+            <span style="background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px">${v.placa}</span>
+            <span style="font-size:12px;color:var(--text)">${v.modelo||'—'}</span>
+          </div>`).join('')}
+      </div>
+      <div class="chart-card">
+        <div class="card-title" style="color:var(--red)"><i class="ti ti-circle-x"></i> Pendentes (${pendentes.length})</div>
+        ${pendentes.length === 0 ? `<div style="font-size:13px;color:var(--muted);padding:8px 0">Todos os caminhões estão em dia! ✅</div>` :
+          pendentes.map(v => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+            <span style="background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px">${v.placa}</span>
+            <span style="font-size:12px;color:var(--text)">${v.modelo||'—'}</span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  // Histórico
+  const tbody = document.getElementById('fechHistoricoBody');
+  const empty = document.getElementById('fechHistoricoEmpty');
+  if (!tbody) return;
+
+  const hist = [...fechamentos].reverse();
+  if (!hist.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+  } else {
+    if (empty) empty.style.display = 'none';
+    tbody.innerHTML = hist.map(f => `
+      <tr>
+        <td><strong>${f.label}</strong></td>
+        <td>${f.inicioStr}</td>
+        <td>${f.fimStr}</td>
+        <td>${f.fechadoEm}</td>
+        <td style="text-align:center">
+          <span style="background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;
+            padding:2px 9px;border-radius:20px">${f.realizaram.length}</span>
+        </td>
+        <td style="text-align:center">
+          <span style="background:${f.pendentes.length > 0 ? 'var(--red-bg)' : 'var(--green-bg)'};
+            color:${f.pendentes.length > 0 ? 'var(--red)' : 'var(--green)'};font-size:11px;font-weight:700;
+            padding:2px 9px;border-radius:20px">${f.pendentes.length}</span>
+        </td>
+      </tr>`).join('');
+  }
+}
+
+function confirmarFechamento() {
+  const hoje = new Date();
+  if (hoje.getDate() < 21) {
+    showToast('O fechamento só pode ser feito a partir do dia 21.', true);
+    return;
+  }
+  if (!confirm('Fechar o período atual?\n\nOs dados de checklist mensal serão zerados para o novo período e o histórico será mantido.')) return;
+  executarFechamento();
+}
+
+function executarFechamento() {
+  const { inicio, fim, label, inicioStr, fimStr } = getPeriodoAtual();
+  const { ok, pendentes } = getCaminhoesPeriodo();
+  const hoje = new Date();
+  const fmtD = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+
+  const registro = {
+    id: Date.now(),
+    label, inicioStr, fimStr,
+    fechadoEm: fmtD(hoje),
+    realizaram: ok.map(v => v.placa),
+    pendentes:  pendentes.map(v => v.placa)
+  };
+
+  fechamentos.push(registro);
+  saveFechamentos(); // localStorage fallback
+
+  // Salvar no Supabase
+  showSyncStatus('Salvando fechamento...', 'carregando');
+  dbSaveFechamento(registro).then(id => {
+    if (id) {
+      showSyncStatus('Fechamento salvo ✓', 'ok');
+    } else {
+      showSyncStatus('Salvo localmente (Supabase indisponível)', 'erro');
+    }
+  });
+
+  showToast(`Período "${label}" fechado! Novo ciclo iniciado.`);
+  renderFechamento();
+  renderPendMensal();
+  renderAgenda();
+  renderDashboard();
+}
+
+// ── AGENDA ──
+function renderAgenda() {
+  const grid  = document.getElementById('agendaGrid');
+  const empty = document.getElementById('agendaEmpty');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  // Período atual
+  const { inicio, fim, label, inicioStr, fimStr } = getPeriodoAtual();
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const totalDias = Math.ceil((fim - inicio) / (1000*60*60*24)) + 1;
+  const diasRestantes = Math.max(0, Math.ceil((fim - hoje) / (1000*60*60*24)));
+
+  // Checklists mensais do período atual por placa
+  const mensaisPeriodo = checklists.filter(c => c.tipoVistoria === 'mensal' && isInPeriodoAtual(c.d));
+  const porPlaca = {};
+  mensaisPeriodo.forEach(c => {
+    if (!porPlaca[c.v] || c.d > porPlaca[c.v].d) porPlaca[c.v] = c;
+  });
+
+  const placasComMensal = Object.keys(porPlaca);
+
+  if (placasComMensal.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+
+  const RADIUS = 28;
+  const CIRCUM = 2 * Math.PI * RADIUS;
+
+  placasComMensal.forEach(placa => {
+    const ultimo = porPlaca[placa];
+    const v = (veiculos || []).find(x => x.placa === placa) || { placa, modelo: '—', tipo: '—', ano: '—' };
+
+    // Com base no período: contagem regressiva até o fim (dia 20)
+    const cor     = diasRestantes <= 0 ? 'var(--red)'    : diasRestantes <= 7 ? 'var(--orange)' : 'var(--green)';
+    const corBg   = diasRestantes <= 0 ? 'var(--red-bg)' : diasRestantes <= 7 ? 'var(--orange-bg)' : 'var(--green-bg)';
+    const corText = cor;
+    const statusMsg = diasRestantes <= 0
+      ? 'Período encerrado'
+      : diasRestantes <= 7
+        ? `Período encerra em ${diasRestantes} dia${diasRestantes!==1?'s':''}`
+        : `${diasRestantes} dias restantes no período`;
+
+    const pct  = Math.max(0, Math.min(1, diasRestantes / totalDias));
+    const dash = CIRCUM * pct;
+    const barPct = Math.max(0, Math.min(100, (diasRestantes / totalDias) * 100));
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+
+    const card = document.createElement('div');
+    card.className = 'agenda-card';
+    card.innerHTML = `
+      <div class="agenda-card-header">
+        <div class="agenda-plate-badge">${v.placa}</div>
+        <div class="agenda-veiculo-info">
+          <div class="agenda-veiculo-modelo">${v.modelo || '—'}</div>
+          <div class="agenda-veiculo-tipo">${v.tipo || 'Veículo'} · ${v.ano || '—'}</div>
+        </div>
+      </div>
+      <div class="agenda-countdown-wrap">
+        <div class="agenda-ring-wrap">
+          <svg class="agenda-ring-svg" width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="${RADIUS}" fill="none" stroke="var(--border)" stroke-width="5"/>
+            <circle cx="36" cy="36" r="${RADIUS}" fill="none"
+              stroke="${cor}" stroke-width="5"
+              stroke-dasharray="${dash} ${CIRCUM}"
+              stroke-linecap="round"/>
+          </svg>
+          <div class="agenda-ring-days">
+            <div class="agenda-ring-num" style="color:${corText}">${diasRestantes}</div>
+            <div class="agenda-ring-label">dias</div>
+          </div>
+        </div>
+        <div class="agenda-info">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+            letter-spacing:.4px;margin-bottom:4px">Período: ${label}</div>
+          <div class="agenda-info-title" style="color:${corText}">${statusMsg}</div>
+          <div class="agenda-info-row">
+            <i class="ti ti-calendar-check" style="font-size:12px"></i>
+            Mensal em: <strong>${ultimo.d || '—'}</strong>
+          </div>
+          <div class="agenda-info-row">
+            <i class="ti ti-calendar-due" style="font-size:12px"></i>
+            Período: <strong>${inicioStr} → ${fimStr}</strong>
+          </div>
+          <div class="agenda-info-row" style="margin-top:5px">
+            <i class="ti ti-user" style="font-size:12px"></i>
+            ${ultimo.m || '—'}
+          </div>
+        </div>
+      </div>
+      <div class="agenda-card-footer">
+        <div class="agenda-bar-track">
+          <div class="agenda-bar-fill" style="width:${barPct}%;background:${cor}"></div>
+        </div>
+        <span class="agenda-due-label" style="color:${corText};background:${corBg};padding:3px 9px;border-radius:20px;font-size:11px">
+          ${diasRestantes <= 0 ? '🔒 Encerrado' : diasRestantes <= 7 ? '⏰ Urgente' : '✅ OK'}
+        </span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
 function showToast(msg, err) {
   const t = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
@@ -7404,6 +8466,8 @@ function showToast(msg, err) {
 }
 
 // ── INIT ──
+fatLoadLocal();
+loadFechamentos();
 renderDashboard();
 renderTable();
 
