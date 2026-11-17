@@ -3138,6 +3138,8 @@ async function dbLoadChecklists() {
       setor: r.setor || 'motorista',
       gestorDecisao: r.gestor_decisao || null,
       gestorObs: r.gestor_obs || '', gestorData: r.gestor_data || '',
+      manutencaoDecisao: r.manutencao_decisao || null,
+      manutencaoObs: r.manutencao_obs || '', manutencaoData: r.manutencao_data || '',
       modeloNome: r.modelo_nome || 'Padrão',
       modeloId: r.modelo_id || null, itensResult: itens,
       comentariosGrupos: comentariosGrupos,
@@ -3396,6 +3398,16 @@ async function dbUpdateChecklistDecisao(dbId, decisao, obs, dataStr) {
     sb.from('checklists').update({
       gestor_decisao: decisao, gestor_obs: obs,
       gestor_data: dataStr, status: decisao
+    }).eq('id', dbId)
+  );
+}
+
+// Decisão do "Checklist Manutenção" (independente da decisão do gestor; não altera o status)
+async function dbUpdateChecklistManutencao(dbId, decisao, obs, dataStr) {
+  const sb = getSB(); if (!sb) return;
+  await dbRun('salvar checklist manutenção', () =>
+    sb.from('checklists').update({
+      manutencao_decisao: decisao, manutencao_obs: obs, manutencao_data: dataStr
     }).eq('id', dbId)
   );
 }
@@ -3946,7 +3958,10 @@ function exportarRelatorio(formato) {
     'Placa Carreta 1':     c.placaCarreta1 || '',
     'Placa Carreta 2':     c.placaCarreta2 || '',
     'Motorista':           c.m || '',
-    'Status':              c.status || ''
+    'Status':              c.status || '',
+    'Checklist Manutenção':      c.manutencaoDecisao || 'Pendente',
+    'Data Manutenção':           c.manutencaoData || '',
+    'Obs. Manutenção':           c.manutencaoObs || ''
   }));
 
   const hoje = new Date();
@@ -3954,7 +3969,7 @@ function exportarRelatorio(formato) {
 
   if (formato === 'xlsx' && typeof XLSX !== 'undefined') {
     const ws = XLSX.utils.json_to_sheet(linhas);
-    ws['!cols'] = [{wch:17},{wch:10},{wch:26},{wch:11},{wch:15},{wch:13},{wch:15},{wch:15},{wch:26},{wch:11}];
+    ws['!cols'] = [{wch:17},{wch:10},{wch:26},{wch:11},{wch:15},{wch:13},{wch:15},{wch:15},{wch:26},{wch:11},{wch:21},{wch:17},{wch:40}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Checklists');
     XLSX.writeFile(wb, nome + '.xlsx');
@@ -6328,11 +6343,83 @@ function _gestorPanelHtml(c) {
     </div>`;
 }
 
+// ── CHECKLIST MANUTENÇÃO (Aprovar / Reprovar) ──
+let manutDecisaoSelecionada = null;
+
+function _manutencaoPanelHtml(c) {
+  if (c.manutencaoDecisao) {
+    const ok = c.manutencaoDecisao === 'Aprovado';
+    return `
+    <div class="gestor-panel">
+      <div class="gestor-panel-header"><i class="ti ti-tools" style="color:var(--muted)"></i><span class="gestor-panel-title">Checklist manutenção</span></div>
+      <div class="gestor-panel-body">
+        <div class="gestor-done-banner gestor-done-${ok ? 'aprovado' : 'reprovado'}">
+          <i class="ti ti-${ok ? 'circle-check' : 'circle-x'}" style="font-size:22px"></i>
+          <div>
+            <div>${c.manutencaoDecisao}${c.manutencaoData ? ' em ' + c.manutencaoData : ''}</div>
+            ${c.manutencaoObs ? `<div style="font-weight:400;font-size:12px;margin-top:3px">${_escHtml(c.manutencaoObs)}</div>` : ''}
+          </div>
+        </div>
+        <button class="btn-secondary" style="margin-top:10px" onclick="reabrirDecisaoManutencao()"><i class="ti ti-refresh"></i> Alterar decisão</button>
+      </div>
+    </div>`;
+  }
+  return `
+    <div class="gestor-panel">
+      <div class="gestor-panel-header"><i class="ti ti-tools" style="color:var(--muted)"></i><span class="gestor-panel-title">Checklist manutenção</span></div>
+      <div class="gestor-panel-body">
+        <div class="gestor-decision-btns">
+          <button class="btn-aprovar" id="btnManAprovar" onclick="selectDecisaoManutencao('Aprovado')"><i class="ti ti-circle-check"></i> Aprovar</button>
+          <button class="btn-reprovar" id="btnManReprovar" onclick="selectDecisaoManutencao('Reprovado')"><i class="ti ti-circle-x"></i> Reprovar</button>
+        </div>
+        <label class="gestor-obs-label" for="manutObsInput">Observação da manutenção (opcional)</label>
+        <textarea class="gestor-obs-input" id="manutObsInput" placeholder="Ex: Trocar pastilha de freio na próxima revisão"></textarea>
+        <button class="gestor-confirm-btn" id="manutConfirmBtn" onclick="confirmarDecisaoManutencao()" disabled>
+          <i class="ti ti-check"></i> Selecione Aprovar ou Reprovar
+        </button>
+      </div>
+    </div>`;
+}
+
+function selectDecisaoManutencao(dec) {
+  manutDecisaoSelecionada = dec;
+  const a = document.getElementById('btnManAprovar');
+  const r = document.getElementById('btnManReprovar');
+  if (a) a.classList.toggle('active', dec === 'Aprovado');
+  if (r) r.classList.toggle('active', dec === 'Reprovado');
+  const btn = document.getElementById('manutConfirmBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = `<i class="ti ti-check"></i> Confirmar: ${dec === 'Aprovado' ? 'Aprovar' : 'Reprovar'}`;
+  }
+}
+
+function confirmarDecisaoManutencao() {
+  const c = checklists.find(x => x.id === viewingChecklistId);
+  if (!c || !manutDecisaoSelecionada) return;
+  const obs = (document.getElementById('manutObsInput')?.value || '').trim();
+  c.manutencaoDecisao = manutDecisaoSelecionada;
+  c.manutencaoObs     = obs;
+  c.manutencaoData    = _agoraBR();
+  if (c.dbId) dbUpdateChecklistManutencao(c.dbId, c.manutencaoDecisao, obs, c.manutencaoData);
+  viewChecklist(c.id);
+  showToast(`Checklist manutenção ${c.id}: ${c.manutencaoDecisao === 'Aprovado' ? 'aprovado' : 'reprovado'}.`);
+}
+
+function reabrirDecisaoManutencao() {
+  const c = checklists.find(x => x.id === viewingChecklistId);
+  if (!c) return;
+  c.manutencaoDecisao = null; c.manutencaoObs = ''; c.manutencaoData = '';
+  if (c.dbId) dbUpdateChecklistManutencao(c.dbId, null, '', '');
+  viewChecklist(c.id);
+}
+
 function viewChecklist(id) {
   const c = checklists.find(x => x.id === id);
   if (!c) return;
   viewingChecklistId = id;
   gestorDecisaoSelecionada = null;
+  manutDecisaoSelecionada = null;
 
   document.getElementById('vm-title').textContent = `Checklist ${c.id}`;
   document.getElementById('vm-sub').textContent   = `${c.modeloNome || 'Padrão'} · ${c.d}`;
@@ -6412,6 +6499,8 @@ function viewChecklist(id) {
       ${c.sig ? `<img class="vm-sig-img" src="${c.sig}" alt="Assinatura">` : '<div class="vm-sig-empty"><i class="ti ti-signature-off"></i> Sem assinatura</div>'}
     </div>
 
+    ${_manutencaoPanelHtml(c)}
+
     ${_gestorPanelHtml(c)}
   `;
 
@@ -6423,6 +6512,7 @@ function closeViewModal() {
   document.getElementById('viewModalBg').classList.remove('open');
   viewingChecklistId = null;
   gestorDecisaoSelecionada = null;
+  manutDecisaoSelecionada = null;
 }
 
 function selectDecisao(dec) {
@@ -6532,6 +6622,11 @@ function exportPDF() {
     <div style="border:1px solid #e2e8f0;border-radius:8px;padding:6px;height:100px;display:flex;align-items:center;justify-content:center">
       ${c.sig ? `<img src="${c.sig}" style="max-height:90px;max-width:100%">` : '<span style="color:#94a3b8;font-size:11px">Sem assinatura</span>'}
     </div>
+    ${c.manutencaoDecisao ? `
+      <div style="font-size:11px;font-weight:700;color:#6b7a99;margin:14px 0 6px">CHECKLIST MANUTENÇÃO</div>
+      <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:12px">
+        <b>${esc(c.manutencaoDecisao)}</b>${c.manutencaoData ? ' em ' + esc(c.manutencaoData) : ''}${c.manutencaoObs ? '<br>' + esc(c.manutencaoObs) : ''}
+      </div>` : ''}
     ${c.gestorDecisao ? `
       <div style="font-size:11px;font-weight:700;color:#6b7a99;margin:14px 0 6px">DECISÃO DO GESTOR</div>
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:12px">
