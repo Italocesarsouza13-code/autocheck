@@ -3392,24 +3392,43 @@ async function dbSaveChecklist(c) {
   return data ? data.id : null;
 }
 
+// Atualiza campos de um checklist e diz se realmente gravou (mostra o motivo do erro)
+async function dbUpdateChecklistCampos(dbId, campos, label) {
+  const sb = getSB();
+  if (!sb) return { ok: false, msg: 'banco de dados não conectado' };
+  if (!dbId) return { ok: false, msg: 'o checklist ainda está sendo enviado ao banco. Feche e abra de novo em alguns segundos' };
+  try {
+    const { data, error } = await sb.from('checklists').update(campos).eq('id', dbId).select('id');
+    if (error) {
+      console.error(`[DB] Erro em ${label}:`, error);
+      showSyncStatus(`Erro: ${label}`, 'erro');
+      return { ok: false, msg: error.message || 'erro desconhecido' };
+    }
+    if (!data || !data.length) return { ok: false, msg: 'o banco não permitiu a alteração (verifique as permissões/RLS da tabela checklists)' };
+    showSyncStatus('Salvo', 'ok');
+    return { ok: true };
+  } catch (e) {
+    console.error(`[DB] Exceção em ${label}:`, e);
+    showSyncStatus('Erro de conexão', 'erro');
+    return { ok: false, msg: 'sem conexão com o banco' };
+  }
+}
+
 async function dbUpdateChecklistDecisao(dbId, decisao, obs, dataStr) {
-  const sb = getSB(); if (!sb) return;
-  await dbRun('salvar decisão do gestor', () =>
-    sb.from('checklists').update({
-      gestor_decisao: decisao, gestor_obs: obs,
-      gestor_data: dataStr, status: decisao
-    }).eq('id', dbId)
-  );
+  return dbUpdateChecklistCampos(dbId, {
+    gestor_decisao: decisao, gestor_obs: obs, gestor_data: dataStr, status: decisao || 'Pendente'
+  }, 'salvar decisão do gestor');
 }
 
 // Decisão do "Checklist Manutenção" (independente da decisão do gestor; não altera o status)
 async function dbUpdateChecklistManutencao(dbId, decisao, obs, dataStr) {
-  const sb = getSB(); if (!sb) return;
-  await dbRun('salvar checklist manutenção', () =>
-    sb.from('checklists').update({
-      manutencao_decisao: decisao, manutencao_obs: obs, manutencao_data: dataStr
-    }).eq('id', dbId)
-  );
+  return dbUpdateChecklistCampos(dbId, {
+    manutencao_decisao: decisao, manutencao_obs: obs, manutencao_data: dataStr
+  }, 'salvar checklist manutenção');
+}
+
+function _avisarSeNaoSalvou(res) {
+  if (res && !res.ok) showToast('Não salvou no banco: ' + res.msg, true);
 }
 
 async function dbDeleteChecklist(dbId) {
@@ -6389,6 +6408,27 @@ function _manutencaoPanelHtml(c) {
     </div>`;
 }
 
+// Ao confirmar um painel, a janela é redesenhada; isto preserva o que já foi
+// digitado/selecionado no outro painel para não perder a observação.
+function _capturarRascunhos() {
+  return {
+    manutObs: document.getElementById('manutObsInput')?.value || '',
+    manutSel: manutDecisaoSelecionada,
+    gestorObs: document.getElementById('gestorObsInput')?.value || '',
+    gestorSel: gestorDecisaoSelecionada
+  };
+}
+
+function _restaurarRascunhos(r) {
+  if (!r) return;
+  const mo = document.getElementById('manutObsInput');
+  if (mo && r.manutObs) mo.value = r.manutObs;
+  if (r.manutSel && document.getElementById('btnManAprovar')) selectDecisaoManutencao(r.manutSel);
+  const go = document.getElementById('gestorObsInput');
+  if (go && r.gestorObs) go.value = r.gestorObs;
+  if (r.gestorSel && document.getElementById('btnDecAprovar')) selectDecisao(r.gestorSel);
+}
+
 function selectDecisaoManutencao(dec) {
   manutDecisaoSelecionada = dec;
   const a = document.getElementById('btnManAprovar');
@@ -6402,24 +6442,29 @@ function selectDecisaoManutencao(dec) {
   }
 }
 
-function confirmarDecisaoManutencao() {
+async function confirmarDecisaoManutencao() {
   const c = checklists.find(x => x.id === viewingChecklistId);
   if (!c || !manutDecisaoSelecionada) return;
+  const rasc = _capturarRascunhos(); rasc.manutObs = ''; rasc.manutSel = null;
   const obs = (document.getElementById('manutObsInput')?.value || '').trim();
   c.manutencaoDecisao = manutDecisaoSelecionada;
   c.manutencaoObs     = obs;
   c.manutencaoData    = _agoraBR();
-  if (c.dbId) dbUpdateChecklistManutencao(c.dbId, c.manutencaoDecisao, obs, c.manutencaoData);
   viewChecklist(c.id);
-  showToast(`Checklist manutenção ${c.id}: ${c.manutencaoDecisao.toLowerCase()}.`);
+  _restaurarRascunhos(rasc);
+  const res = await dbUpdateChecklistManutencao(c.dbId, c.manutencaoDecisao, obs, c.manutencaoData);
+  if (res.ok) showToast(`Checklist manutenção ${c.id}: ${c.manutencaoDecisao.toLowerCase()}.`);
+  else _avisarSeNaoSalvou(res);
 }
 
-function reabrirDecisaoManutencao() {
+async function reabrirDecisaoManutencao() {
   const c = checklists.find(x => x.id === viewingChecklistId);
   if (!c) return;
+  const rasc = _capturarRascunhos();
   c.manutencaoDecisao = null; c.manutencaoObs = ''; c.manutencaoData = '';
-  if (c.dbId) dbUpdateChecklistManutencao(c.dbId, null, '', '');
   viewChecklist(c.id);
+  _restaurarRascunhos(rasc);
+  _avisarSeNaoSalvou(await dbUpdateChecklistManutencao(c.dbId, null, '', ''));
 }
 
 function viewChecklist(id) {
@@ -6536,35 +6581,35 @@ function selectDecisao(dec) {
   }
 }
 
-function confirmarDecisao() {
+async function confirmarDecisao() {
   const c = checklists.find(x => x.id === viewingChecklistId);
   if (!c || !gestorDecisaoSelecionada) return;
+  const rasc = _capturarRascunhos(); rasc.gestorObs = ''; rasc.gestorSel = null;
   const obs = (document.getElementById('gestorObsInput')?.value || '').trim();
   c.gestorDecisao = gestorDecisaoSelecionada;
   c.status        = gestorDecisaoSelecionada;
   c.gestorObs     = obs;
   c.gestorData    = _agoraBR();
-  if (c.dbId) dbUpdateChecklistDecisao(c.dbId, c.gestorDecisao, obs, c.gestorData);
   recalcDriverStats();
   renderTable(); renderDashboard();
   if (document.getElementById('panel-historico')?.style.display !== 'none') renderManutencaoHistory();
   viewChecklist(c.id);
-  showToast(`Checklist ${c.id} ${c.gestorDecisao === 'Aprovado' ? 'aprovado' : 'reprovado'}.`);
+  _restaurarRascunhos(rasc);
+  const res = await dbUpdateChecklistDecisao(c.dbId, c.gestorDecisao, obs, c.gestorData);
+  if (res.ok) showToast(`Checklist ${c.id} ${c.gestorDecisao === 'Aprovado' ? 'aprovado' : 'reprovado'}.`);
+  else _avisarSeNaoSalvou(res);
 }
 
-function reabrirDecisao() {
+async function reabrirDecisao() {
   const c = checklists.find(x => x.id === viewingChecklistId);
   if (!c) return;
+  const rasc = _capturarRascunhos();
   c.gestorDecisao = null; c.status = 'Pendente'; c.gestorObs = ''; c.gestorData = '';
-  const sb = getSB();
-  if (sb && c.dbId) {
-    dbRun('reabrir decisão', () => sb.from('checklists').update({
-      gestor_decisao: null, gestor_obs: '', gestor_data: '', status: 'Pendente'
-    }).eq('id', c.dbId));
-  }
   recalcDriverStats();
   renderTable(); renderDashboard();
   viewChecklist(c.id);
+  _restaurarRascunhos(rasc);
+  _avisarSeNaoSalvou(await dbUpdateChecklistDecisao(c.dbId, null, '', ''));
 }
 
 // ── PDF ──
