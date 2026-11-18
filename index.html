@@ -3959,7 +3959,7 @@ function exportarRelatorio(formato) {
     'Placa Carreta 2':     c.placaCarreta2 || '',
     'Motorista':           c.m || '',
     'Status':              c.status || '',
-    'Checklist Manutenção':      c.manutencaoDecisao || 'Pendente',
+    'Checklist Manutenção':      _manutLabel(c.manutencaoDecisao) || 'Pendente',
     'Data Manutenção':           c.manutencaoData || '',
     'Obs. Manutenção':           c.manutencaoObs || ''
   }));
@@ -6343,12 +6343,20 @@ function _gestorPanelHtml(c) {
     </div>`;
 }
 
-// ── CHECKLIST MANUTENÇÃO (Aprovar / Reprovar) ──
+// ── CHECKLIST MANUTENÇÃO (Feito / Não feito) ──
 let manutDecisaoSelecionada = null;
+
+// Converte valores antigos (Aprovado/Reprovado) para Feito/Não feito
+function _manutLabel(v) {
+  if (!v) return null;
+  if (v === 'Aprovado') return 'Feito';
+  if (v === 'Reprovado') return 'Não feito';
+  return v;
+}
 
 function _manutencaoPanelHtml(c) {
   if (c.manutencaoDecisao) {
-    const ok = c.manutencaoDecisao === 'Aprovado';
+    const ok = _manutLabel(c.manutencaoDecisao) === 'Feito';
     return `
     <div class="gestor-panel">
       <div class="gestor-panel-header"><i class="ti ti-tools" style="color:var(--muted)"></i><span class="gestor-panel-title">Checklist manutenção</span></div>
@@ -6356,7 +6364,7 @@ function _manutencaoPanelHtml(c) {
         <div class="gestor-done-banner gestor-done-${ok ? 'aprovado' : 'reprovado'}">
           <i class="ti ti-${ok ? 'circle-check' : 'circle-x'}" style="font-size:22px"></i>
           <div>
-            <div>${c.manutencaoDecisao}${c.manutencaoData ? ' em ' + c.manutencaoData : ''}</div>
+            <div>${_manutLabel(c.manutencaoDecisao)}${c.manutencaoData ? ' em ' + c.manutencaoData : ''}</div>
             ${c.manutencaoObs ? `<div style="font-weight:400;font-size:12px;margin-top:3px">${_escHtml(c.manutencaoObs)}</div>` : ''}
           </div>
         </div>
@@ -6369,13 +6377,13 @@ function _manutencaoPanelHtml(c) {
       <div class="gestor-panel-header"><i class="ti ti-tools" style="color:var(--muted)"></i><span class="gestor-panel-title">Checklist manutenção</span></div>
       <div class="gestor-panel-body">
         <div class="gestor-decision-btns">
-          <button class="btn-aprovar" id="btnManAprovar" onclick="selectDecisaoManutencao('Aprovado')"><i class="ti ti-circle-check"></i> Aprovar</button>
-          <button class="btn-reprovar" id="btnManReprovar" onclick="selectDecisaoManutencao('Reprovado')"><i class="ti ti-circle-x"></i> Reprovar</button>
+          <button class="btn-aprovar" id="btnManAprovar" onclick="selectDecisaoManutencao('Feito')"><i class="ti ti-circle-check"></i> Feito</button>
+          <button class="btn-reprovar" id="btnManReprovar" onclick="selectDecisaoManutencao('Não feito')"><i class="ti ti-circle-x"></i> Não feito</button>
         </div>
         <label class="gestor-obs-label" for="manutObsInput">Observação da manutenção (opcional)</label>
         <textarea class="gestor-obs-input" id="manutObsInput" placeholder="Ex: Trocar pastilha de freio na próxima revisão"></textarea>
         <button class="gestor-confirm-btn" id="manutConfirmBtn" onclick="confirmarDecisaoManutencao()" disabled>
-          <i class="ti ti-check"></i> Selecione Aprovar ou Reprovar
+          <i class="ti ti-check"></i> Selecione Feito ou Não feito
         </button>
       </div>
     </div>`;
@@ -6385,12 +6393,12 @@ function selectDecisaoManutencao(dec) {
   manutDecisaoSelecionada = dec;
   const a = document.getElementById('btnManAprovar');
   const r = document.getElementById('btnManReprovar');
-  if (a) a.classList.toggle('active', dec === 'Aprovado');
-  if (r) r.classList.toggle('active', dec === 'Reprovado');
+  if (a) a.classList.toggle('active', dec === 'Feito');
+  if (r) r.classList.toggle('active', dec === 'Não feito');
   const btn = document.getElementById('manutConfirmBtn');
   if (btn) {
     btn.disabled = false;
-    btn.innerHTML = `<i class="ti ti-check"></i> Confirmar: ${dec === 'Aprovado' ? 'Aprovar' : 'Reprovar'}`;
+    btn.innerHTML = `<i class="ti ti-check"></i> Confirmar: ${dec}`;
   }
 }
 
@@ -6403,7 +6411,7 @@ function confirmarDecisaoManutencao() {
   c.manutencaoData    = _agoraBR();
   if (c.dbId) dbUpdateChecklistManutencao(c.dbId, c.manutencaoDecisao, obs, c.manutencaoData);
   viewChecklist(c.id);
-  showToast(`Checklist manutenção ${c.id}: ${c.manutencaoDecisao === 'Aprovado' ? 'aprovado' : 'reprovado'}.`);
+  showToast(`Checklist manutenção ${c.id}: ${c.manutencaoDecisao.toLowerCase()}.`);
 }
 
 function reabrirDecisaoManutencao() {
@@ -6625,7 +6633,7 @@ function exportPDF() {
     ${c.manutencaoDecisao ? `
       <div style="font-size:11px;font-weight:700;color:#6b7a99;margin:14px 0 6px">CHECKLIST MANUTENÇÃO</div>
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:12px">
-        <b>${esc(c.manutencaoDecisao)}</b>${c.manutencaoData ? ' em ' + esc(c.manutencaoData) : ''}${c.manutencaoObs ? '<br>' + esc(c.manutencaoObs) : ''}
+        <b>${esc(_manutLabel(c.manutencaoDecisao))}</b>${c.manutencaoData ? ' em ' + esc(c.manutencaoData) : ''}${c.manutencaoObs ? '<br>' + esc(c.manutencaoObs) : ''}
       </div>` : ''}
     ${c.gestorDecisao ? `
       <div style="font-size:11px;font-weight:700;color:#6b7a99;margin:14px 0 6px">DECISÃO DO GESTOR</div>
